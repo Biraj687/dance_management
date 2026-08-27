@@ -44,15 +44,16 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = 'same-origin'
 X_FRAME_OPTIONS = 'DENY'
 
-# Compressed, hashed static files served by WhiteNoise
+# Compressed static files served by WhiteNoise (non-strict to prevent missing manifest 500 crashes)
 STORAGES = {
     'default': {
         'BACKEND': 'django.core.files.storage.FileSystemStorage',
     },
     'staticfiles': {
-        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
     },
 }
+WHITENOISE_MANIFEST_STRICT = False
 
 # Email
 EMAIL_BACKEND = env('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
