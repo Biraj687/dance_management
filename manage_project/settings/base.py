@@ -140,6 +140,9 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
+# Tell WhiteNoise to serve static files without crashing on missing manifest entries
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+
 # User-uploaded files (invoice PDFs, photos). Never commit this directory.
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
