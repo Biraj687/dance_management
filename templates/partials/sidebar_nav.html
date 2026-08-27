@@ -1,0 +1,83 @@
+<ul class="space-y-1">
+            <li>
+                <a href="{% url 'dashboard:index' %}" class="group flex items-center px-3 py-2.5 rounded-lg transition-colors {% if request.resolver_match.url_name == 'index' %}text-accent-gold bg-bg-elevated-2 border-l-3 border-accent-gold{% else %}text-text-secondary hover:text-text-primary hover:bg-bg-elevated-2{% endif %}">
+                    <span class="w-5 h-5 mr-3 flex items-center justify-center {% if request.resolver_match.url_name == 'index' %}text-accent-gold{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2z" />
+                        </svg>
+                    </span>
+                    <span class="{% if request.resolver_match.url_name == 'index' %}font-medium{% endif %}">Dashboard</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'students:list' %}" class="group flex items-center px-3 py-2.5 rounded-lg transition-colors {% if request.resolver_match.app_name == 'students' and request.resolver_match.url_name == 'list' %}text-accent-gold bg-bg-elevated-2 border-l-3 border-accent-gold{% else %}text-text-secondary hover:text-text-primary hover:bg-bg-elevated-2{% endif %}">
+                    <span class="w-5 h-5 mr-3 flex items-center justify-center {% if request.resolver_match.app_name == 'students' and request.resolver_match.url_name == 'list' %}text-accent-gold{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20v-6m-2 4v-6m-2 4v-6m6-4v12a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h5a2 2 0 012 2v5m4 0V7a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2z" />
+                        </svg>
+                    </span>
+                    <span class="{% if request.resolver_match.app_name == 'students' and request.resolver_match.url_name == 'list' %}font-medium{% endif %}">Students</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'teachers:list' %}" class="group flex items-center px-3 py-2.5 rounded-lg transition-colors {% if request.resolver_match.app_name == 'teachers' and request.resolver_match.url_name == 'list' %}text-accent-gold bg-bg-elevated-2 border-l-3 border-accent-gold{% else %}text-text-secondary hover:text-text-primary hover:bg-bg-elevated-2{% endif %}">
+                    <span class="w-5 h-5 mr-3 flex items-center justify-center {% if request.resolver_match.app_name == 'teachers' and request.resolver_match.url_name == 'list' %}text-accent-gold{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.5v7.5m0 0l-3-3m3 3l3-3M12 21v-7.5m0 0l3 3m-3 3l-3-3" />
+                        </svg>
+                    </span>
+                    <span class="{% if request.resolver_match.app_name == 'teachers' and request.resolver_match.url_name == 'list' %}font-medium{% endif %}">Teachers</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'packages:list' %}" class="group flex items-center px-3 py-2.5 rounded-lg transition-colors {% if request.resolver_match.app_name == 'packages' and request.resolver_match.url_name == 'list' %}text-accent-gold bg-bg-elevated-2 border-l-3 border-accent-gold{% else %}text-text-secondary hover:text-text-primary hover:bg-bg-elevated-2{% endif %}">
+                    <span class="w-5 h-5 mr-3 flex items-center justify-center {% if request.resolver_match.app_name == 'packages' and request.resolver_match.url_name == 'list' %}text-accent-gold{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 20h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v11a2 2 0 002 2z" />
+                        </svg>
+                    </span>
+                    <span class="{% if request.resolver_match.app_name == 'packages' and request.resolver_match.url_name == 'list' %}font-medium{% endif %}">Packages</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'styles:list' %}" class="group flex items-center px-3 py-2.5 rounded-lg transition-colors {% if request.resolver_match.app_name == 'styles' and request.resolver_match.url_name == 'list' %}text-accent-gold bg-bg-elevated-2 border-l-3 border-accent-gold{% else %}text-text-secondary hover:text-text-primary hover:bg-bg-elevated-2{% endif %}">
+                    <span class="w-5 h-5 mr-3 flex items-center justify-center {% if request.resolver_match.app_name == 'styles' and request.resolver_match.url_name == 'list' %}text-accent-gold{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h10M7 16h10" />
+                        </svg>
+                    </span>
+                    <span class="{% if request.resolver_match.app_name == 'styles' and request.resolver_match.url_name == 'list' %}font-medium{% endif %}">Dance Styles</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'billing:list' %}" class="group flex items-center px-3 py-2.5 rounded-lg transition-colors {% if request.resolver_match.app_name == 'billing' and request.resolver_match.url_name == 'list' %}text-accent-gold bg-bg-elevated-2 border-l-3 border-accent-gold{% else %}text-text-secondary hover:text-text-primary hover:bg-bg-elevated-2{% endif %}">
+                    <span class="w-5 h-5 mr-3 flex items-center justify-center {% if request.resolver_match.app_name == 'billing' and request.resolver_match.url_name == 'list' %}text-accent-gold{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </span>
+                    <span class="{% if request.resolver_match.app_name == 'billing' and request.resolver_match.url_name == 'list' %}font-medium{% endif %}">Invoices</span>
+                </a>
+            </li>
+            <hr class="border-border-hairline my-2">
+            <li>
+                <a href="{% url 'accounts:profile' %}" class="group flex items-center px-3 py-2.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-elevated-2 transition-colors">
+                    <span class="w-5 h-5 mr-3 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.128 3.847a.75.75 0 011.07-.09l5.78 4.334a.75.75 0 010 1.28l-5.78 4.334a.75.75 0 01-1.07-.09l5.78-4.334a.75.75 0 010-1.28l-5.78-4.334z" />
+                        </svg>
+                    </span>
+                    Profile
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'accounts:logout' %}" class="group flex items-center px-3 py-2.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-elevated-2 transition-colors">
+                    <span class="w-5 h-5 mr-3 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7" />
+                        </svg>
+                    </span>
+                    Logout
+                </a>
+            </li>
+        </ul>

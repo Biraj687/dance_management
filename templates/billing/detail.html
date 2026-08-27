@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block title %}{{ studio_name }} - {{ invoice.invoice_number }}{% endblock %}
+{% block page_title %}{{ invoice.invoice_number }}{% endblock %}
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2 space-y-6">
+        <div class="bg-bg-elevated-1 border border-border-hairline rounded-lg p-6">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h2 class="text-lg font-semibold text-text-primary">Invoice Summary</h2>
+                    <p class="text-sm text-text-secondary">Issued {{ invoice.issued_date }}</p>
+                </div>
+                {% if invoice.enrollment.payment_status == 'PAID' %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-status-active/20 text-status-active border border-status-active/40">Paid</span>
+                {% elif invoice.enrollment.payment_status == 'PARTIAL' %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-status-expired/20 text-status-expired border border-status-expired/40">Partial</span>
+                {% else %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-status-suspended/20 text-status-suspended border border-status-suspended/40">{{ invoice.status }}</span>
+                {% endif %}
+            </div>
+            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <dt class="text-xs text-text-secondary">Student</dt>
+                    <dd class="text-sm text-text-primary">{{ invoice.enrollment.student.full_name }}</dd>
+                </div>
+                <div>
+                    <dt class="text-xs text-text-secondary">Package</dt>
+                    <dd class="text-sm text-text-primary">{{ invoice.enrollment.package.name }}</dd>
+                </div>
+                <div>
+                    <dt class="text-xs text-text-secondary">Dance Style</dt>
+                    <dd class="text-sm text-text-primary">{{ invoice.enrollment.dance_style_snapshot.name }}</dd>
+                </div>
+                <div>
+                    <dt class="text-xs text-text-secondary">Enrollment Period</dt>
+                    <dd class="text-sm text-text-primary">{{ invoice.enrollment.entry_date }} &rarr; {{ invoice.enrollment.exit_date }}</dd>
+                </div>
+                <div>
+                    <dt class="text-xs text-text-secondary">Payment Method</dt>
+                    <dd class="text-sm text-text-primary">{{ invoice.payment_method }}</dd>
+                </div>
+            </dl>
+        </div>
+        <div class="bg-bg-elevated-1 border border-border-hairline rounded-lg p-6">
+            <h2 class="text-lg font-semibold text-text-primary mb-4">Payment Breakdown</h2>
+            <div class="space-y-3">
+                <div class="flex items-center justify-between py-2 border-b border-border-hairline">
+                    <span class="text-sm text-text-secondary">Total Amount</span>
+                    <span class="text-sm font-medium text-text-primary">{{ currency_symbol }} {{ invoice.enrollment.total_fee }}</span>
+                </div>
+                <div class="flex items-center justify-between py-2 border-b border-border-hairline">
+                    <span class="text-sm text-text-secondary">Amount Paid</span>
+                    <span class="text-sm font-medium text-status-active">{{ currency_symbol }} {{ invoice.enrollment.amount_paid }}</span>
+                </div>
+                <div class="flex items-center justify-between py-2">
+                    <span class="text-sm text-text-secondary">Balance Due</span>
+                    <span class="text-sm font-bold text-text-primary">{{ currency_symbol }} {{ invoice.enrollment.balance_due }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="lg:col-span-1">
+        <div class="bg-bg-elevated-1 border border-border-hairline rounded-lg p-6">
+            <h2 class="text-lg font-semibold text-text-primary mb-4">Student</h2>
+            <div class="space-y-3">
+                <div><p class="text-xs text-text-secondary">Name</p><p class="text-sm text-text-primary">{{ invoice.enrollment.student.full_name }}</p></div>
+                <div><p class="text-xs text-text-secondary">Phone</p><p class="text-sm text-text-primary">{{ invoice.enrollment.student.phone }}</p></div>
+                <div><p class="text-xs text-text-secondary">Email</p><p class="text-sm text-text-primary">{{ invoice.enrollment.student.email }}</p></div>
+            </div>
+        </div>
+        <div class="bg-bg-elevated-1 border border-border-hairline rounded-lg p-6 mt-6">
+            <h2 class="text-lg font-semibold text-text-primary mb-4">Actions</h2>
+            <div class="flex flex-col gap-3">
+                <a href="{% url 'billing:download' invoice.pk %}" class="px-4 py-2 bg-bg-base border border-border-hairline text-text-primary rounded-lg hover:bg-bg-elevated-2 transition-colors text-center">Download PDF</a>
+                {% if invoice.enrollment.balance_due > 0 %}
+                <a href="{% url 'billing:payment' invoice.pk %}" class="px-4 py-2 bg-accent-gold hover:bg-accent-gold-hover text-white rounded-lg transition-colors text-center">Record Payment</a>
+                {% else %}
+                <span class="px-4 py-2 bg-bg-base border border-status-active/40 text-status-active rounded-lg text-center text-sm">Fully Paid</span>
+                {% endif %}
+                <a href="{% url 'billing:list' %}" class="px-4 py-2 bg-bg-base border border-border-hairline text-text-primary rounded-lg hover:bg-bg-elevated-2 transition-colors text-center">Back to Invoices</a>
+            </div>
+        </div>
+        <div class="bg-bg-elevated-1 border border-border-hairline rounded-lg p-6 mt-6">
+            <h2 class="text-lg font-semibold text-text-primary mb-4">Payment History</h2>
+            {% for payment in payments %}<div class="flex justify-between border-b border-border-hairline py-2"><span>{{ payment.paid_on }} · {{ payment.payment_method|default:'Unspecified' }}</span><strong>{{ currency_symbol }} {{ payment.amount }}</strong></div>{% empty %}<p class="text-text-secondary">No payments recorded.</p>{% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}{{ studio_name }} - {{ page_title }}{% endblock %}
+{% block page_title %}{{ page_title }}{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto">
+    <div class="bg-bg-elevated-1 border border-border-hairline rounded-lg p-6">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-lg bg-status-expired/20 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-status-expired" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            <h2 class="text-xl font-display font-bold text-text-primary">Deactivate Dance Style</h2>
+        </div>
+
+        <p class="text-text-secondary text-sm mb-2">
+            Are you sure you want to deactivate the dance style
+            <span class="font-semibold text-text-primary">"{{ style.name }}"</span>?
+        </p>
+
+        <div class="flex items-center gap-2 mb-6">
+            <div class="w-4 h-4 rounded" style="background-color: {{ style.color_tag }}"></div>
+            <span class="text-sm text-text-secondary">{{ style.color_tag }}</span>
+        </div>
+
+        <div class="bg-status-pending-payment/10 border border-status-pending-payment/30 rounded-lg px-4 py-3 mb-6">
+            <p class="text-sm text-status-pending-payment">
+                <strong>Note:</strong> Deactivated styles are hidden from new package creation but can be restored later.
+            </p>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-border-hairline">
+            <a href="{% url 'styles:list' %}" class="text-text-secondary hover:text-text-primary text-sm">Cancel</a>
+            <form method="post" action="{% url 'styles:delete' style.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="bg-status-expired hover:bg-status-expired/80 text-white font-medium py-2.5 px-5 rounded-lg transition-colors">
+                    Deactivate Style
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

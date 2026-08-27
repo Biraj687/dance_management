@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}{{ studio_name }} - Server error{% endblock %}
+{% block page_title %}Server Error{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto text-center py-12">
+    <div class="bg-bg-elevated-1 border border-border-hairline rounded-lg p-8">
+        <p class="text-5xl font-display font-bold text-status-expired mb-3">500</p>
+        <h2 class="text-xl font-bold text-text-primary mb-2">Something went wrong</h2>
+        <p class="text-text-secondary mb-6">An unexpected error occurred. Please try again or contact your administrator.</p>
+        <a href="{% url 'dashboard:index' %}" class="inline-flex items-center justify-center bg-accent-gold hover:bg-accent-gold-hover text-white font-medium py-2.5 px-5 rounded-lg transition-colors">
+            Back to Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}

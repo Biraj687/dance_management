@@ -1,0 +1,39 @@
+/* Light-theme extras that Tailwind CDN classes do not cover. */
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="color"]),
+select,
+textarea {
+    color: #111827;
+    background-color: #FFFFFF;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: #6B7280;
+}
+
+select option {
+    color: #111827;
+    background-color: #FFFFFF;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 0.55;
+    cursor: pointer;
+}
+
+.form-panel p { margin: 0 0 1rem; }
+.form-panel label { display: block; margin-bottom: .35rem; color: #4b5563; font-size: .82rem; font-weight: 700; letter-spacing: .02em; }
+.form-panel input:not([type="checkbox"]), .form-panel select, .form-panel textarea {
+    width: 100%; border: 1px solid #d1d5db; border-radius: .5rem; padding: .65rem .8rem; background: #fff; color: #111827;
+}
+.form-panel input:focus, .form-panel select:focus, .form-panel textarea:focus { outline: 2px solid #F3A232; outline-offset: 2px; border-color: #F3A232; }
+.form-panel .helptext { display: block; margin-top: .25rem; color: #6b7280; font-size: .75rem; }
+.form-panel ul.errorlist { margin: .25rem 0 0; padding: 0; list-style: none; color: #b0564f; font-size: .8rem; }
+.form-section { padding: 1.25rem; border: 1px solid #e5e7eb; border-radius: .6rem; background: #fafafa; }
+.form-section-title { margin-bottom: 1.1rem; color: #111827; font-family: Fraunces, serif; font-size: 1.15rem; font-weight: 700; }
+.field-wrap { margin-bottom: 1rem; }
+.field-error { margin-top: .3rem; color: #b0564f; font-size: .8rem; }
+.style-checkbox-grid ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem; margin: 0; padding: 0; list-style: none; }
+.style-checkbox-grid li { display: flex; align-items: center; gap: .45rem; color: #374151; }
+.style-checkbox-grid input, .form-panel input[type="radio"], .form-panel input[type="checkbox"] { accent-color: #F3A232; }

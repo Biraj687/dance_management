@@ -1,0 +1,45 @@
+# Virtualenv — never ship this
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Django
+db.sqlite3
+*.sqlite3
+/staticfiles/
+/media/
+/invoices/
+*.log
+local_settings.py
+
+# Secrets — generate a fresh SECRET_KEY per deployment
+.env
+.env.local
+.env.*.local
+
+# Tests / coverage
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+.mypy_cache/
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+Desktop.ini

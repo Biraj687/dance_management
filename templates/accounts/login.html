@@ -1,0 +1,87 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - {{ studio_name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'bg-base': '#FFFFFF',
+                        'bg-elevated-1': '#FFFFFF',
+                        'bg-elevated-2': '#F9FAFB',
+                        'border-hairline': '#E5E7EB',
+                        'text-primary': '#111827',
+                        'text-secondary': '#6B7280',
+                        'accent-gold': '#F3A232',
+                        'accent-gold-hover': '#FFB44D',
+                        'status-active': '#5FA777',
+                        'status-upcoming': '#5B8FB0',
+                        'status-expired': '#B0564F',
+                        'status-pending-payment': '#C99A3E',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-bg-base min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-bg-elevated-1 rounded-xl border border-border-hairline p-8 shadow-lg">
+        <div class="text-center mb-8">
+            <div class="flex items-center justify-center mb-4">
+                <img src="{% if studio_logo_url %}{{ studio_logo_url }}{% else %}{% static 'images/logo.png' %}{% endif %}" alt="{{ studio_name }}" class="h-20 w-auto max-w-full object-contain">
+            </div>
+            <p class="text-text-secondary">Admin Login</p>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mb-4 p-4 rounded-lg {% if message.tags == 'success' %}bg-status-active/20 border border-status-active/30 text-status-active{% elif message.tags == 'error' %}bg-status-expired/20 border border-status-expired/30 text-status-expired{% elif message.tags == 'info' %}bg-status-upcoming/20 border border-status-upcoming/30 text-status-upcoming{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            <div>
+                <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-text-secondary mb-1">Email</label>
+                {{ form.username }}
+                {% if form.username.errors %}
+                    <p class="mt-1 text-sm text-status-expired">{{ form.username.errors|first }}</p>
+                {% endif %}
+            </div>
+            <div>
+                <label for="{{ form.password.id_for_label }}" class="block text-sm font-medium text-text-secondary mb-1">Password</label>
+                {{ form.password }}
+                {% if form.password.errors %}
+                    <p class="mt-1 text-sm text-status-expired">{{ form.password.errors|first }}</p>
+                {% endif %}
+            </div>
+            {% if form.non_field_errors %}
+                <div class="mb-4 p-3 rounded-lg bg-status-expired/20 border border-status-expired/30 text-status-expired text-sm">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+            <button type="submit"
+                    class="w-full bg-accent-gold hover:bg-accent-gold-hover text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2">
+                Sign In
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </button>
+        </form>
+
+        <div class="mt-6 text-center">
+            <a href="{% url 'accounts:password_reset' %}" class="text-accent-gold hover:text-accent-gold-hover text-sm">Forgot password?</a>
+            <p class="text-text-secondary">
+                Contact your administrator if you need password assistance.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

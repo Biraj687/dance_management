@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% block title %}{{ studio_name }} - {{ student.full_name }}{% endblock %}
+{% block page_title %}{{ student.full_name }}{% endblock %}
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-1">
+        <div class="bg-bg-elevated-1 border border-border-hairline rounded-lg p-6 text-center">
+            <div class="w-24 h-24 mx-auto bg-bg-base rounded-full mb-4 flex items-center justify-center">
+                <span class="text-3xl font-display text-accent-gold">{{ student.full_name|first }}</span>
+            </div>
+            <h2 class="text-xl font-bold text-text-primary">{{ student.full_name }}</h2>
+                <p class="text-sm text-text-secondary mb-4">{{ student.email }}</p>
+            {% if student.status == 'ACTIVE' %}
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-status-active/20 text-status-active border border-status-active/40">Active</span>
+            {% elif student.status == 'EXPIRED' %}
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-status-expired/20 text-status-expired border border-status-expired/40">Expired</span>
+            {% else %}
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-status-suspended/20 text-status-suspended border border-status-suspended/40">{{ student.status }}</span>
+            {% endif %}
+            <div class="mt-6 space-y-3 text-left">
+                <div><p class="text-xs text-text-secondary">Phone</p><p class="text-sm text-text-primary">{{ student.phone }}</p></div>
+                <div><p class="text-xs text-text-secondary">Current Package</p><p class="text-sm text-text-primary">{{ current_package|default:'None' }}</p></div>
+                <div><p class="text-xs text-text-secondary">Teacher</p><p class="text-sm text-text-primary">{{ assigned_teacher|default:'Not assigned' }}</p></div>
+                <div><p class="text-xs text-text-secondary">Admission Level</p><p class="text-sm text-text-primary">{{ student.get_admission_level_display|default:'Not recorded' }}</p></div>
+                <div><p class="text-xs text-text-secondary">Preferred Styles</p><p class="text-sm text-text-primary">{{ student.preferred_dance_styles|join:', '|default:'Not recorded' }}</p></div>
+            </div>
+        </div>
+    </div>
+    <div class="lg:col-span-2">
+        <div class="bg-bg-elevated-1 border border-border-hairline rounded-lg p-6 mb-6">
+            <h2 class="text-lg font-semibold text-text-primary mb-4">Metrics</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-bg-base rounded-lg p-4 text-center">
+                    <p class="text-2xl font-display font-bold text-accent-gold">{{ student.total_classes_attended }}</p>
+                    <p class="text-xs text-text-secondary">Classes Attended</p>
+                </div>
+                <div class="bg-bg-base rounded-lg p-4 text-center">
+                    <p class="text-2xl font-display font-bold text-accent-gold">{{ student.packages_completed }}</p>
+                    <p class="text-xs text-text-secondary">Packages Completed</p>
+                </div>
+                <div class="bg-bg-base rounded-lg p-4 text-center">
+                    <p class="text-2xl font-display font-bold text-accent-gold">{{ currency_symbol }} {{ student.balance_due }}</p>
+                    <p class="text-xs text-text-secondary">Balance Due</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-bg-elevated-1 border border-border-hairline rounded-lg p-6">
+            <h2 class="text-lg font-semibold text-text-primary mb-4">Actions</h2>
+            <div class="flex gap-3 flex-wrap">
+                <a href="{% url 'students:edit' student.id %}" class="px-4 py-2 bg-accent-gold hover:bg-accent-gold-hover text-white rounded-lg transition-colors">Edit Student</a>
+                <a href="{% url 'students:renew' student.id %}" class="px-4 py-2 bg-accent-gold hover:bg-accent-gold-hover text-white rounded-lg transition-colors">Renew Package</a>
+                {% if current_invoice and current_invoice.enrollment.balance_due > 0 %}<a href="{% url 'billing:payment' current_invoice.pk %}" class="px-4 py-2 bg-bg-base border border-accent-gold text-accent-gold rounded-lg">Update Payment</a>{% endif %}
+            </div>
+        </div>
+        <div class="bg-bg-elevated-1 border border-border-hairline rounded-lg p-6 mt-6">
+            <h2 class="text-lg font-semibold text-text-primary mb-4">Enrollment History</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-left text-text-secondary border-b border-border-hairline">
+                            <th class="py-3 pr-4 font-medium">Package</th>
+                            <th class="py-3 pr-4 font-medium">Style</th>
+                            <th class="py-3 pr-4 font-medium">Entry Date</th>
+                            <th class="py-3 pr-4 font-medium">Exit Date</th>
+                            <th class="py-3 pr-4 font-medium">Amount</th>
+                            <th class="py-3 pr-4 font-medium">Class Time</th>
+                            <th class="py-3 pr-4 font-medium">Payment History</th>
+                            <th class="py-3 font-medium">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for enrollment in enrollments %}
+                        <tr class="border-b border-border-hairline last:border-0">
+                            <td class="py-3 pr-4 text-text-primary">{{ enrollment.package_name }}</td>
+                            <td class="py-3 pr-4 text-text-secondary">{{ enrollment.style }}</td>
+                            <td class="py-3 pr-4 text-text-secondary">{{ enrollment.entry_date }}</td>
+                            <td class="py-3 pr-4 text-text-secondary">{{ enrollment.exit_date }}</td>
+                            <td class="py-3 pr-4 text-text-secondary">{{ currency_symbol }} {{ enrollment.amount }}</td>
+                            <td class="py-3 pr-4 text-text-secondary">{{ enrollment.time_slot|default:'Any time' }}</td>
+                            <td class="py-3 pr-4 text-text-secondary">{% for payment in enrollment.payments %}{{ payment.paid_on }} · {{ payment.get_payment_method_display }} · {{ currency_symbol }} {{ payment.amount }}{% if not forloop.last %}<br>{% endif %}{% empty %}No payments{% endfor %}</td>
+                            <td class="py-3">
+                                {% if enrollment.status == 'ACTIVE' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-status-active/20 text-status-active border border-status-active/40">Active</span>
+                                {% elif enrollment.status == 'COMPLETED' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-bg-elevated-2 text-text-secondary border border-border-hairline">Completed</span>
+                                {% elif enrollment.status == 'EXPIRED' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-status-expired/20 text-status-expired border border-status-expired/40">Expired</span>
+                                {% else %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-status-suspended/20 text-status-suspended border border-status-suspended/40">{{ enrollment.status }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="py-6 text-center text-text-secondary">No enrollment history available.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,3 @@
+{% extends 'base.html' %}
+{% block title %}{{ studio_name }} - {{ page_title }}{% endblock %}{% block page_title %}{{ page_title }}{% endblock %}
+{% block content %}<div class="max-w-2xl mx-auto"><h1 class="text-3xl font-display font-bold mb-6">{{ page_title }}</h1><form method="post" class="form-panel bg-bg-elevated-1 border border-border-hairline rounded-lg p-6">{% csrf_token %}{{ form.as_p }}<button class="bg-accent-gold text-white font-medium py-2.5 px-5 rounded-lg">Save Teacher</button></form></div>{% endblock %}

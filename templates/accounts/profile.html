@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}{{ studio_name }} - Profile{% endblock %}
+{% block page_title %}Profile{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <h1 class="text-3xl font-display font-bold text-text-primary mb-6">Staff Profile</h1>
+    <div class="bg-bg-elevated-1 border border-border-hairline rounded-lg p-6">
+        <div class="flex items-center gap-4 mb-6 pb-6 border-b border-border-hairline">
+            <div class="w-16 h-16 rounded-full bg-accent-gold flex items-center justify-center text-white font-display text-2xl">
+                {{ user.first_name|default:user.username|slice:":1"|upper }}
+            </div>
+            <div>
+                <h2 class="text-xl font-bold text-text-primary">{{ user.get_full_name|default:user.username }}</h2>
+                <p class="text-sm text-text-secondary">{{ user.email }}</p>
+            </div>
+        </div>
+        <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <dt class="text-xs text-text-secondary">Role</dt>
+                <dd class="text-sm text-text-primary">{% if staff %}{{ staff.get_role_display }}{% else %}Staff{% endif %}</dd>
+            </div>
+            <div>
+                <dt class="text-xs text-text-secondary">Phone</dt>
+                <dd class="text-sm text-text-primary">{% if staff and staff.phone %}{{ staff.phone }}{% else %}—{% endif %}</dd>
+            </div>
+            <div>
+                <dt class="text-xs text-text-secondary">Username</dt>
+                <dd class="text-sm text-text-primary">{{ user.username }}</dd>
+            </div>
+            <div>
+                <dt class="text-xs text-text-secondary">Last login</dt>
+                <dd class="text-sm text-text-primary">{{ user.last_login|date:"M d, Y H:i"|default:"—" }}</dd>
+            </div>
+        </dl>
+        <div class="mt-6 pt-6 border-t border-border-hairline">
+            <a href="{% url 'accounts:password_change' %}" class="inline-flex items-center bg-accent-gold hover:bg-accent-gold-hover text-white font-medium px-4 py-2 rounded-lg">Change Password</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

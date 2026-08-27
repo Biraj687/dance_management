@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}{{ studio_name }} - {{ teacher.full_name }}{% endblock %}
+{% block page_title %}{{ teacher.full_name }}{% endblock %}
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Left Column - Profile Card -->
+    <div class="lg:col-span-1">
+        <div class="bg-bg-elevated-1 border border-border-hairline rounded-lg p-6 text-center">
+            <div class="w-24 h-24 mx-auto bg-bg-base rounded-full mb-4 flex items-center justify-center">
+                <span class="text-3xl font-display text-accent-gold">{{ teacher.full_name|first }}</span>
+            </div>
+            <h2 class="text-xl font-bold text-text-primary">{{ teacher.full_name }}</h2>
+            <p class="text-sm text-text-secondary mb-4">{{ teacher.email }}</p>
+            {% if teacher.is_active %}
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-status-active/20 text-status-active border border-status-active/40">Active</span>
+            {% else %}
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-text-secondary/20 text-text-secondary border border-text-secondary/40">Inactive</span>
+            {% endif %}
+            <div class="mt-6 space-y-3 text-left">
+                <div><p class="text-xs text-text-secondary">Phone</p><p class="text-sm text-text-primary">{{ teacher.phone }}</p></div>
+                <div><p class="text-xs text-text-secondary">Payment Type</p><p class="text-sm text-text-primary">{{ teacher.pay_type|title }}</p></div>
+                <div><p class="text-xs text-text-secondary">Pay Rate</p><p class="text-sm text-text-primary">{{ currency_symbol }}{{ teacher.pay_rate|floatformat:0 }}/{{ teacher.pay_type|lower }}</p></div>
+                <div><p class="text-xs text-text-secondary">Max Capacity</p><p class="text-sm text-text-primary">{{ teacher.max_student_capacity }} students</p></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column - Details -->
+    <div class="lg:col-span-2">
+        <!-- Dance Styles -->
+        <div class="bg-bg-elevated-1 border border-border-hairline rounded-lg p-6 mb-6">
+            <h2 class="text-lg font-semibold text-text-primary mb-4">Assigned Dance Styles</h2>
+            {% if teacher.assigned_styles %}
+            <div class="flex flex-wrap gap-2">
+                {% for style in teacher.assigned_styles.all %}
+                <span class="bg-accent-gold-muted text-accent-gold px-3 py-1.5 rounded-full text-sm font-medium">{{ style }}</span>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-text-secondary">No dance styles assigned.</p>
+            {% endif %}
+        </div>
+
+        <!-- Metrics -->
+        <div class="bg-bg-elevated-1 border border-border-hairline rounded-lg p-6 mb-6">
+            <h2 class="text-lg font-semibold text-text-primary mb-4">Performance</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-bg-base rounded-lg p-4 text-center">
+                    <p class="text-2xl font-display font-bold text-accent-gold">{{ teacher.active_assigned_student_count }}</p>
+                    <p class="text-xs text-text-secondary">Active Students</p>
+                </div>
+                <div class="bg-bg-base rounded-lg p-4 text-center">
+                    <p class="text-2xl font-display font-bold text-accent-gold">{{ teacher.total_historical_students }}</p>
+                    <p class="text-xs text-text-secondary">Total Students</p>
+                </div>
+                <div class="bg-bg-base rounded-lg p-4 text-center">
+                    <p class="text-2xl font-display font-bold text-accent-gold">{{ currency_symbol }}{{ teacher.monthly_wage_estimate|floatformat:0 }}</p>
+                    <p class="text-xs text-text-secondary">Est. Monthly</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="bg-bg-elevated-1 border border-border-hairline rounded-lg p-6">
+            <h2 class="text-lg font-semibold text-text-primary mb-4">Actions</h2>
+            <div class="flex gap-3 flex-wrap">
+                <a href="/teachers/{{ teacher.id }}/edit/" class="px-4 py-2 bg-accent-gold hover:bg-accent-gold-hover text-white rounded-lg transition-colors">Edit Teacher</a>
+                <a href="/teachers/{{ teacher.id }}/schedule/" class="px-4 py-2 bg-bg-base border border-border-hairline hover:bg-bg-elevated-2 text-text-primary rounded-lg transition-colors">View Schedule</a>
+                <form method="post" action="{% url 'teachers:deactivate' teacher.id %}">{% csrf_token %}<button class="px-4 py-2 bg-bg-base border border-status-suspended text-status-suspended rounded-lg hover:bg-status-suspended/10 transition-colors">Deactivate</button></form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

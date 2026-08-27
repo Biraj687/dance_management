@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}{{ studio_name }} - {{ page_title }}{% endblock %}
+{% block page_title %}{{ page_title }}{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto">
+  <h1 class="text-3xl font-display font-bold mb-6">{{ page_title }}</h1>
+  {% if not student %}
+  <div class="mb-4"><a href="{% url 'students:create' %}" class="text-accent-gold font-medium">+ Add a new student first</a></div>
+  <form method="post" class="form-panel bg-bg-elevated-1 border border-border-hairline rounded-lg p-6">{% csrf_token %}
+    <label for="student_id" class="block text-sm font-medium mb-2">Student</label>
+    <select id="student_id" name="student_id" required class="w-full px-4 py-2.5 rounded-lg bg-bg-base border border-border-hairline">
+      <option value="">Select a student</option>{% for item in students %}<option value="{{ item.pk }}">{{ item.full_name }}</option>{% endfor %}
+    </select>
+    <button class="mt-5 bg-accent-gold text-white font-medium py-2.5 px-5 rounded-lg">Continue</button>
+  </form>
+  {% else %}
+  <form method="post" class="form-panel bg-bg-elevated-1 border border-border-hairline rounded-lg p-6">{% csrf_token %}
+    <section class="form-section"><h2 class="form-section-title">4. Package & Payment Record</h2>
+    {% for field in form %}<div class="field-wrap"><label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>{{ field }}{% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}</div>{% endfor %}
+    <p class="text-xs text-text-secondary border-l-2 border-accent-gold pl-3">Certificate will be provided for 6-Month & Yearly Package only.</p></section>
+    {% if form.non_field_errors %}<div class="text-status-expired">{{ form.non_field_errors }}</div>{% endif %}
+    <button class="bg-accent-gold text-white font-medium py-2.5 px-5 rounded-lg">Save Enrollment</button>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}

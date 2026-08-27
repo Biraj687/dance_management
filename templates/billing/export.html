@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}{{ studio_name }} - Export {{ type }}{% endblock %}
+{% block page_title %}Export {{ type }}{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto text-center py-12">
+    <div class="bg-bg-elevated-1 border border-border-hairline rounded-lg p-8">
+        <div class="w-16 h-16 mx-auto mb-6 bg-status-active/20 rounded-full flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-status-active" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        </div>
+        <h2 class="text-xl font-bold text-text-primary mb-2">Export Ready</h2>
+        <p class="text-text-secondary mb-6">Your {{ type }} data is ready to download in {{ format }} format.</p>
+        <div class="flex flex-col gap-3">
+            <button onclick="alert('Download would start here')" class="w-full bg-accent-gold hover:bg-accent-gold-hover text-white font-medium py-3 px-5 rounded-lg transition-colors flex items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Download {{ format }}
+            </button>
+            <a href="/billing/" class="w-full bg-bg-base border border-border-hairline hover:bg-bg-elevated-2 text-text-primary font-medium py-3 px-5 rounded-lg transition-colors text-center">
+                Back to Billing
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

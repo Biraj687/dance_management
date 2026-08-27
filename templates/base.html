@@ -1,0 +1,147 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ studio_name }}{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:wght@400;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'display': ['Fraunces', 'serif'],
+                        'body': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'bg-base': '#FFFFFF',
+                        'bg-elevated-1': '#FFFFFF',
+                        'bg-elevated-2': '#F9FAFB',
+                        'border-hairline': '#E5E7EB',
+                        'text-primary': '#111827',
+                        'text-secondary': '#6B7280',
+                        'accent-gold': '#F3A232',
+                        'accent-gold-hover': '#FFB44D',
+                        'accent-gold-muted': 'rgba(243, 162, 50, 0.15)',
+                        'status-active': '#5FA777',
+                        'status-upcoming': '#5B8FB0',
+                        'status-expired': '#B0564F',
+                        'status-pending-payment': '#C99A3E',
+                        'status-suspended': '#F3A232',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+    <style>
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #F3F4F6; }
+        ::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #F3A232; }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-bg-base text-text-primary font-body antialiased">
+    {% block body %}
+    <!-- Sidebar -->
+    <div class="fixed inset-y-0 left-0 z-50 w-64 bg-bg-elevated-1 border-r border-border-hairline transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out lg:translate-x-0" id="sidebar">
+        <div class="flex items-center justify-center min-h-[5.5rem] px-4 py-3 border-b border-border-hairline">
+            <div class="flex items-center justify-center w-full">
+                <img src="{% if studio_logo_url %}{{ studio_logo_url }}{% else %}{% static 'images/logo.png' %}{% endif %}" alt="{{ studio_name }}" class="h-14 w-auto max-w-full object-contain">
+            </div>
+        </div>
+        <nav class="px-4 py-2 space-y-1 overflow-y-auto" style="height: calc(100vh - 5.5rem);">
+            {% include 'partials/sidebar_nav.html' %}
+        </nav>
+    </div>
+
+    <!-- Main content -->
+    <div class="ml-0 md:ml-64 min-h-screen">
+        <!-- Top bar -->
+        <header class="fixed top-0 left-0 md:left-64 right-0 z-40 bg-bg-base border-b border-border-hairline h-16 flex items-center justify-between px-4 md:px-6">
+            <div class="flex items-center space-x-4">
+                <button id="mobile-menu-toggle" class="md:hidden text-text-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+                <h1 class="hidden md:block text-xl font-display font-bold text-text-primary">{% block page_title %}Dashboard{% endblock %}</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span class="text-sm text-text-secondary">{{ today|date:"M d, Y" }}</span>
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-full bg-accent-gold flex items-center justify-center text-white font-medium text-sm">
+                        {{ user.first_name|default:user.username|slice:":1"|upper }}
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page content -->
+        <main class="pt-16 px-4 md:px-6 pb-8">
+            <!-- Django Messages -->
+            {% if messages %}
+            <div class="mb-6" id="messages">
+                {% for message in messages %}
+                <div class="mb-3 px-4 py-3 rounded-lg flex items-center gap-3
+                    {% if message.tags == 'success' %}bg-status-active/20 border border-status-active/40 text-status-active
+                    {% elif message.tags == 'error' %}bg-status-expired/20 border border-status-expired/40 text-status-expired
+                    {% elif message.tags == 'warning' %}bg-status-pending-payment/20 border border-status-pending-payment/40 text-status-pending-payment
+                    {% else %}bg-status-upcoming/20 border border-status-upcoming/40 text-status-upcoming
+                    {% endif %}"
+                     role="alert">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        {% if message.tags == 'success' %}
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        {% elif message.tags == 'error' %}
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        {% elif message.tags == 'warning' %}
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        {% else %}
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        {% endif %}
+                    </svg>
+                    <span class="text-sm font-medium">{{ message }}</span>
+                    <button type="button" class="ml-auto text-current opacity-70 hover:opacity-100" onclick="this.parentElement.remove()">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-toggle')?.addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+        });
+        
+        // Auto-dismiss messages after 5 seconds
+        setTimeout(() => {
+            document.querySelectorAll('#messages > div').forEach(el => {
+                el.style.transition = 'opacity 0.3s ease';
+                el.style.opacity = '0';
+                setTimeout(() => el.remove(), 300);
+            });
+        }, 5000);
+    </script>
+    {% endblock %}
+</body>
+</html>
