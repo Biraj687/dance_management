@@ -29,7 +29,11 @@ def _invoices(request):
     query = request.GET.get('q', '').strip()
     if query:
         from django.db.models import Q
-        invoices = invoices.filter(Q(invoice_number__icontains=query) | Q(enrollment__student__full_name__icontains=query) | Q(enrollment__package__name__icontains=query) | Q(enrollment__dance_style_snapshot__name__icontains=query))
+        invoices = invoices.filter(
+            Q(invoice_number__icontains=query) |
+            Q(enrollment__student__full_name__icontains=query) |
+            Q(enrollment__package__name__icontains=query)
+        )
     return invoices
 
 

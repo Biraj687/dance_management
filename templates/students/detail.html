@@ -21,8 +21,8 @@
                 <div><p class="text-xs text-text-secondary">Phone</p><p class="text-sm text-text-primary">{{ student.phone }}</p></div>
                 <div><p class="text-xs text-text-secondary">Current Package</p><p class="text-sm text-text-primary">{{ current_package|default:'None' }}</p></div>
                 <div><p class="text-xs text-text-secondary">Teacher</p><p class="text-sm text-text-primary">{{ assigned_teacher|default:'Not assigned' }}</p></div>
+                <div><p class="text-xs text-text-secondary">Class Time</p><p class="text-sm text-text-primary">{{ current_time_slot|default:'Not set' }}</p></div>
                 <div><p class="text-xs text-text-secondary">Admission Level</p><p class="text-sm text-text-primary">{{ student.get_admission_level_display|default:'Not recorded' }}</p></div>
-                <div><p class="text-xs text-text-secondary">Preferred Styles</p><p class="text-sm text-text-primary">{{ student.preferred_dance_styles|join:', '|default:'Not recorded' }}</p></div>
             </div>
         </div>
     </div>
@@ -59,10 +59,11 @@
                     <thead>
                         <tr class="text-left text-text-secondary border-b border-border-hairline">
                             <th class="py-3 pr-4 font-medium">Package</th>
-                            <th class="py-3 pr-4 font-medium">Style</th>
+                            <th class="py-3 pr-4 font-medium">Teacher</th>
                             <th class="py-3 pr-4 font-medium">Entry Date</th>
                             <th class="py-3 pr-4 font-medium">Exit Date</th>
-                            <th class="py-3 pr-4 font-medium">Amount</th>
+                            <th class="py-3 pr-4 font-medium">Total Fee</th>
+                            <th class="py-3 pr-4 font-medium">Remaining Balance</th>
                             <th class="py-3 pr-4 font-medium">Class Time</th>
                             <th class="py-3 pr-4 font-medium">Payment History</th>
                             <th class="py-3 font-medium">Status</th>
@@ -72,10 +73,11 @@
                         {% for enrollment in enrollments %}
                         <tr class="border-b border-border-hairline last:border-0">
                             <td class="py-3 pr-4 text-text-primary">{{ enrollment.package_name }}</td>
-                            <td class="py-3 pr-4 text-text-secondary">{{ enrollment.style }}</td>
+                            <td class="py-3 pr-4 text-text-secondary">{{ enrollment.teacher|default:'-' }}</td>
                             <td class="py-3 pr-4 text-text-secondary">{{ enrollment.entry_date }}</td>
                             <td class="py-3 pr-4 text-text-secondary">{{ enrollment.exit_date }}</td>
                             <td class="py-3 pr-4 text-text-secondary">{{ currency_symbol }} {{ enrollment.amount }}</td>
+                            <td class="py-3 pr-4 text-text-secondary">{{ currency_symbol }} {{ enrollment.balance }}</td>
                             <td class="py-3 pr-4 text-text-secondary">{{ enrollment.time_slot|default:'Any time' }}</td>
                             <td class="py-3 pr-4 text-text-secondary">{% for payment in enrollment.payments %}{{ payment.paid_on }} · {{ payment.get_payment_method_display }} · {{ currency_symbol }} {{ payment.amount }}{% if not forloop.last %}<br>{% endif %}{% empty %}No payments{% endfor %}</td>
                             <td class="py-3">

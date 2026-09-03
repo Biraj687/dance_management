@@ -18,29 +18,18 @@
             {% endif %}
             <div class="mt-6 space-y-3 text-left">
                 <div><p class="text-xs text-text-secondary">Phone</p><p class="text-sm text-text-primary">{{ teacher.phone }}</p></div>
-                <div><p class="text-xs text-text-secondary">Payment Type</p><p class="text-sm text-text-primary">{{ teacher.pay_type|title }}</p></div>
+                <div><p class="text-xs text-text-secondary">Payment Type</p><p class="text-sm text-text-primary">{{ teacher.get_pay_type_display }}</p></div>
+                {% if teacher.pay_type == 'PERCENTAGE' %}
+                <div><p class="text-xs text-text-secondary">Pay Percentage</p><p class="text-sm text-text-primary">{{ teacher.pay_percentage }}% of student fees</p></div>
+                {% else %}
                 <div><p class="text-xs text-text-secondary">Pay Rate</p><p class="text-sm text-text-primary">{{ currency_symbol }}{{ teacher.pay_rate|floatformat:0 }}/{{ teacher.pay_type|lower }}</p></div>
-                <div><p class="text-xs text-text-secondary">Max Capacity</p><p class="text-sm text-text-primary">{{ teacher.max_student_capacity }} students</p></div>
+                {% endif %}
             </div>
         </div>
     </div>
 
     <!-- Right Column - Details -->
     <div class="lg:col-span-2">
-        <!-- Dance Styles -->
-        <div class="bg-bg-elevated-1 border border-border-hairline rounded-lg p-6 mb-6">
-            <h2 class="text-lg font-semibold text-text-primary mb-4">Assigned Dance Styles</h2>
-            {% if teacher.assigned_styles %}
-            <div class="flex flex-wrap gap-2">
-                {% for style in teacher.assigned_styles.all %}
-                <span class="bg-accent-gold-muted text-accent-gold px-3 py-1.5 rounded-full text-sm font-medium">{{ style }}</span>
-                {% endfor %}
-            </div>
-            {% else %}
-            <p class="text-text-secondary">No dance styles assigned.</p>
-            {% endif %}
-        </div>
-
         <!-- Metrics -->
         <div class="bg-bg-elevated-1 border border-border-hairline rounded-lg p-6 mb-6">
             <h2 class="text-lg font-semibold text-text-primary mb-4">Performance</h2>

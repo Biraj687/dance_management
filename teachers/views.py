@@ -7,18 +7,14 @@ from django.shortcuts import get_object_or_404, redirect, render
 from .forms import TeacherForm
 from .models import Teacher
 from .availability_forms import TeacherAvailabilityForm
-from styles.models import DanceStyle
 
 
 @login_required
 def teacher_list(request):
-    teachers = Teacher.all_objects.prefetch_related('assigned_styles').order_by('full_name')
+    teachers = Teacher.all_objects.order_by('full_name')
     query = request.GET.get('q', '').strip()
     if query:
         teachers = teachers.filter(Q(full_name__icontains=query) | Q(phone__icontains=query) | Q(email__icontains=query))
-    style_id = request.GET.get('style')
-    if style_id:
-        teachers = teachers.filter(assigned_styles__id=style_id)
     sort = request.GET.get('sort', 'full_name')
     if sort in {'full_name', '-full_name', 'pay_rate', '-pay_rate'}:
         teachers = teachers.order_by(sort)
@@ -27,12 +23,12 @@ def teacher_list(request):
             current_students=Count('enrollments', filter=Q(enrollments__is_active=True))
         ).order_by('-current_students' if sort == 'active_students' else 'current_students')
     page = Paginator(teachers, 25).get_page(request.GET.get('page'))
-    return render(request, 'teachers/list.html', {'teachers': page, 'page_obj': page, 'page_title': 'Teachers', 'query': query, 'sort': sort, 'style_filter': style_id or '', 'styles': DanceStyle.objects.filter(is_active=True)})
+    return render(request, 'teachers/list.html', {'teachers': page, 'page_obj': page, 'page_title': 'Teachers', 'query': query, 'sort': sort})
 
 
 @login_required
 def teacher_detail(request, pk):
-    teacher = get_object_or_404(Teacher.objects.prefetch_related('assigned_styles', 'enrollments__student'), pk=pk)
+    teacher = get_object_or_404(Teacher.objects.prefetch_related('enrollments__student'), pk=pk)
     return render(request, 'teachers/detail.html', {'teacher': teacher, 'page_title': teacher.full_name})
 
 

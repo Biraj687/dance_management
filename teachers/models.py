@@ -47,6 +47,7 @@ class Teacher(SoftDeleteModel):
         choices=[
             ('HOURLY', 'Hourly'),
             ('MONTHLY', 'Monthly'),
+            ('PERCENTAGE', 'Percentage of Fee'),
         ],
         default='HOURLY',
         verbose_name='Pay Type'
@@ -54,11 +55,15 @@ class Teacher(SoftDeleteModel):
     pay_rate = models.DecimalField(
         max_digits=10,
         decimal_places=2,
+        default=0,
         verbose_name='Pay Rate'
     )
-    max_student_capacity = models.PositiveIntegerField(
+    pay_percentage = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
         default=0,
-        verbose_name='Max Student Capacity'
+        verbose_name='Pay Percentage (%)',
+        help_text='Percentage of total student fees paid to this teacher (e.g. 15 = 15%)'
     )
 
     class Meta:
@@ -71,14 +76,8 @@ class Teacher(SoftDeleteModel):
 
     @property
     def is_active_with_capacity(self):
-        """Check if teacher is active and has capacity for more students."""
-        if not self.is_active:
-            return False
-        if self.max_student_capacity <= 0:
-            return True
-        today = timezone.localdate()
-        active_enrollments = self.enrollments.filter(is_active=True, entry_date__lte=today, exit_date__gte=today).count()
-        return active_enrollments < self.max_student_capacity
+        """Check if teacher is active (no capacity limit now)."""
+        return self.is_active
 
     @property
     def active_assigned_student_count(self):
@@ -98,6 +97,12 @@ class Teacher(SoftDeleteModel):
             return self.pay_rate * 160  # Assuming 40 hours/week
         elif self.pay_type == 'MONTHLY':
             return self.pay_rate
+        elif self.pay_type == 'PERCENTAGE':
+            # Sum of active student fees × percentage
+            today = timezone.localdate()
+            active = self.enrollments.filter(is_active=True, entry_date__lte=today, exit_date__gte=today).select_related('package')
+            total_fees = sum(e.total_fee for e in active)
+            return total_fees * (self.pay_percentage / 100)
         return 0
 
 

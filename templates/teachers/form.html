@@ -1,3 +1,20 @@
 {% extends 'base.html' %}
 {% block title %}{{ studio_name }} - {{ page_title }}{% endblock %}{% block page_title %}{{ page_title }}{% endblock %}
-{% block content %}<div class="max-w-2xl mx-auto"><h1 class="text-3xl font-display font-bold mb-6">{{ page_title }}</h1><form method="post" class="form-panel bg-bg-elevated-1 border border-border-hairline rounded-lg p-6">{% csrf_token %}{{ form.as_p }}<button class="bg-accent-gold text-white font-medium py-2.5 px-5 rounded-lg">Save Teacher</button></form></div>{% endblock %}
+{% block content %}<div class="max-w-2xl mx-auto"><h1 class="text-3xl font-display font-bold mb-6">{{ page_title }}</h1><form method="post" class="form-panel bg-bg-elevated-1 border border-border-hairline rounded-lg p-6">{% csrf_token %}
+<div class="space-y-4">
+  {% for field in form %}
+  <div class="field-wrap">
+    <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-text-secondary mb-1">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+    {{ field }}
+    {% if field.name == 'pay_percentage' %}
+    <p class="text-xs text-text-secondary mt-1">Enter the % of total student fees this teacher earns (e.g. 15 = 15%). Only used when Pay Type is "Percentage of Fee".</p>
+    {% endif %}
+    {% if field.name == 'pay_rate' %}
+    <p class="text-xs text-text-secondary mt-1">Used when Pay Type is Hourly or Monthly. Set to 0 if using Percentage.</p>
+    {% endif %}
+    {% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+  </div>
+  {% endfor %}
+</div>
+{% if form.non_field_errors %}<div class="field-error mt-3">{{ form.non_field_errors }}</div>{% endif %}
+<button class="mt-6 bg-accent-gold text-white font-medium py-2.5 px-5 rounded-lg">Save Teacher</button></form></div>{% endblock %}

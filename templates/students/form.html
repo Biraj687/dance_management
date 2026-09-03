@@ -1,25 +1,94 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 {% block title %}{{ studio_name }} - {{ page_title }}{% endblock %}
 {% block page_title %}{{ page_title }}{% endblock %}
 {% block content %}
 <div class="max-w-4xl mx-auto">
-  <div class="mb-6"><p class="text-xs uppercase tracking-widest text-accent-gold font-bold">Admission Form</p><h1 class="text-3xl font-display font-bold text-text-primary">{{ page_title }}</h1><p class="text-text-secondary mt-1">Add a student and optionally enroll them in one package.</p></div>
-  <form method="post" enctype="multipart/form-data" class="form-panel space-y-6">{% csrf_token %}
-    <section class="form-section"><h2 class="form-section-title">1. Profile Details</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-x-5">
-      {% for field in form %}{% if field.name == 'full_name' or field.name == 'profile_photo' or field.name == 'date_of_birth_bs' or field.name == 'age_at_admission' or field.name == 'admission_level' or field.name == 'education_qualification' or field.name == 'school_college' %}<div class="field-wrap {% if field.name == 'full_name' or field.name == 'education_qualification' or field.name == 'school_college' %}md:col-span-2{% endif %}"><label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>{{ field }}{% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}</div>{% endif %}{% endfor %}
-    </div></section>
-    <section class="form-section"><h2 class="form-section-title">2. Contact & Family Details</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-x-5">
-      {% for field in form %}{% if field.name == 'phone' or field.name == 'email' or field.name == 'address' or field.name == 'father_name' or field.name == 'father_phone' or field.name == 'mother_name' or field.name == 'mother_phone' or field.name == 'emergency_contact_name' or field.name == 'emergency_contact_phone' %}<div class="field-wrap {% if field.name == 'address' %}md:col-span-2{% endif %}"><label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>{{ field }}{% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}</div>{% endif %}{% endfor %}
-    </div></section>
-    <section class="form-section"><h2 class="form-section-title">3. Background & Preferences</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-x-5">
-      {% for field in form %}{% if field.name == 'previous_institute' or field.name == 'training_duration' %}<div class="field-wrap"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}</div>{% endif %}{% endfor %}
-      <div class="field-wrap md:col-span-2"><label>{{ form.preferred_dance_styles.label }}</label><div class="style-checkbox-grid">{{ form.preferred_dance_styles }}</div>{% for error in form.preferred_dance_styles.errors %}<p class="field-error">{{ error }}</p>{% endfor %}</div>
-    </div></section>
-    <section class="form-section"><h2 class="form-section-title">4. Package, Teacher & Payment</h2><p class="text-xs text-text-secondary mb-4">Choose one package. Entry date defaults to the date this student is added.</p><div class="grid grid-cols-1 md:grid-cols-2 gap-x-5">
-      {% for field in form %}{% if field.name == 'package' or field.name == 'time_slot' or field.name == 'teacher' or field.name == 'entry_date' or field.name == 'exit_date' or field.name == 'package_term' or field.name == 'payment_method' or field.name == 'amount_paid' or field.name == 'payment_status' %}<div class="field-wrap"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}</div>{% endif %}{% endfor %}
-    </div><p class="text-xs text-text-secondary border-l-2 border-accent-gold pl-3">Certificate will be provided for 6-Month & Yearly Package only.</p></section>
+  <div class="mb-6">
+    <p class="text-xs uppercase tracking-widest text-accent-gold font-bold">{% if student %}Edit Student{% else %}Admission Form{% endif %}</p>
+    <h1 class="text-3xl font-display font-bold text-text-primary">{{ page_title }}</h1>
+    <p class="text-text-secondary mt-1">{% if student %}Update student profile details.{% else %}Add a student and optionally enroll them in one package.{% endif %}</p>
+  </div>
+  <form method="post" class="form-panel space-y-6">{% csrf_token %}
+    <section class="form-section">
+      <h2 class="form-section-title">1. Profile Details</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-5">
+        {% for field in form %}{% if field.name == 'full_name' or field.name == 'date_of_birth_bs' or field.name == 'age_at_admission' or field.name == 'admission_level' or field.name == 'education_qualification' or field.name == 'school_college' %}
+        <div class="field-wrap {% if field.name == 'full_name' or field.name == 'education_qualification' or field.name == 'school_college' %}md:col-span-2{% endif %}">
+          <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+          {{ field }}{% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+        </div>{% endif %}{% endfor %}
+      </div>
+    </section>
+    <section class="form-section">
+      <h2 class="form-section-title">2. Contact & Family Details</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-5">
+        {% for field in form %}{% if field.name == 'phone' or field.name == 'email' or field.name == 'address' or field.name == 'father_name' or field.name == 'father_phone' or field.name == 'mother_name' or field.name == 'mother_phone' or field.name == 'emergency_contact_name' or field.name == 'emergency_contact_phone' %}
+        <div class="field-wrap {% if field.name == 'address' %}md:col-span-2{% endif %}">
+          <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+          {{ field }}{% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+        </div>{% endif %}{% endfor %}
+      </div>
+    </section>
+    <section class="form-section">
+      <h2 class="form-section-title">3. Background</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-5">
+        {% for field in form %}{% if field.name == 'previous_institute' or field.name == 'training_duration' %}
+        <div class="field-wrap">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}{% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+        </div>{% endif %}{% endfor %}
+      </div>
+    </section>
+    {% if not student %}
+    <section class="form-section">
+      <h2 class="form-section-title">4. Package, Teacher & Class Time</h2>
+      <p class="text-xs text-text-secondary mb-4">Choose one package. Entry date defaults to today.</p>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-5">
+        {% for field in form %}{% if field.name == 'package' or field.name == 'teacher' or field.name == 'time_slot' %}
+        <div class="field-wrap">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}{% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+        </div>{% endif %}{% endfor %}
+      </div>
+      <div class="mt-4 p-4 bg-bg-base border border-accent-gold/30 rounded-lg">
+        <p class="text-xs font-semibold text-accent-gold uppercase tracking-wider mb-3">Fees</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-5">
+          {% for field in form %}{% if field.name == 'admission_fee' %}
+          <div class="field-wrap md:col-span-2">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            <p class="text-xs text-text-secondary mt-1">{{ field.help_text }}</p>
+            {% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+          </div>{% endif %}{% endfor %}
+          <p class="text-xs text-text-secondary md:col-span-2">Total fee = Package price + Admission fee. The total will be auto-calculated and saved on the enrollment.</p>
+        </div>
+      </div>
+      <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-5">
+        {% for field in form %}{% if field.name == 'entry_date' or field.name == 'exit_date' or field.name == 'package_term' or field.name == 'payment_method' or field.name == 'amount_paid' or field.name == 'payment_status' %}
+        <div class="field-wrap">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}{% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+        </div>{% endif %}{% endfor %}
+      </div>
+    </section>
+    {% else %}
+    {% if active_enrollment %}
+    <section class="form-section">
+      <h2 class="form-section-title">Current Enrollment (Read-only)</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-bg-base p-3 rounded-lg"><p class="text-xs text-text-secondary">Package</p><p class="text-sm font-medium text-text-primary">{{ active_enrollment.package.name }}</p></div>
+        <div class="bg-bg-base p-3 rounded-lg"><p class="text-xs text-text-secondary">Teacher</p><p class="text-sm font-medium text-text-primary">{{ active_enrollment.teacher|default:'Not assigned' }}</p></div>
+        <div class="bg-bg-base p-3 rounded-lg"><p class="text-xs text-text-secondary">Class Time</p><p class="text-sm font-medium text-text-primary">{{ active_enrollment.time_slot|default:'Any time' }}</p></div>
+      </div>
+      <p class="text-xs text-text-secondary mt-3">To change the package, use the Renew option from the student detail page.</p>
+    </section>
+    {% endif %}
+    {% endif %}
     <div class="field-wrap flex items-center gap-2">{{ form.is_active }}<label for="{{ form.is_active.id_for_label }}">Active student record</label></div>
-    {% if form.non_field_errors %}<div class="field-error">{{ form.non_field_errors }}</div>{% endif %}<div class="flex justify-end pt-4 border-t border-border-hairline"><button class="bg-accent-gold hover:bg-accent-gold-hover text-white font-medium py-2.5 px-5 rounded-lg">Save Student</button></div>
+    {% if form.non_field_errors %}<div class="field-error">{{ form.non_field_errors }}</div>{% endif %}
+    <div class="flex justify-end pt-4 border-t border-border-hairline">
+      <button class="bg-accent-gold hover:bg-accent-gold-hover text-white font-medium py-2.5 px-5 rounded-lg">Save Student</button>
+    </div>
   </form>
 </div>
 {% endblock %}

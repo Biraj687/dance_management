@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from datetime import timedelta
 from dateutil.relativedelta import relativedelta
+from decimal import Decimal
 
 from billing.models import Invoice
 from billing.views import _invoice_pdf_bytes
@@ -13,7 +14,6 @@ from django.core.files.base import ContentFile
 from .forms import EnrollmentForm, StudentForm
 from .models import Enrollment, Student
 from packages.models import Package
-from styles.models import DanceStyle
 from teachers.models import Teacher
 
 
@@ -29,10 +29,11 @@ def _make_invoice(enrollment):
 
 @login_required
 def student_list(request):
-    students = Student.objects.prefetch_related('enrollments__package', 'enrollments__dance_style_snapshot').order_by('full_name')
+    students = Student.objects.prefetch_related(
+        'enrollments__package', 'enrollments__teacher', 'enrollments__time_slot'
+    ).order_by('full_name')
     query = request.GET.get('q', '').strip()
     status = request.GET.get('status', '').upper()
-    style_id = request.GET.get('style', '')
     teacher_id = request.GET.get('teacher', '')
     payment_status = request.GET.get('payment_status', '').upper()
     if query:
@@ -48,18 +49,21 @@ def student_list(request):
         students = students.filter(enrollments__entry_date__gt=today)
     elif status == 'EXPIRED':
         students = students.filter(enrollments__exit_date__lt=today)
-    if style_id:
-        students = students.filter(enrollments__dance_style_snapshot_id=style_id)
     if teacher_id:
         students = students.filter(enrollments__teacher_id=teacher_id)
     if payment_status in {'PAID', 'PENDING', 'PARTIAL'}:
         students = students.filter(enrollments__payment_status=payment_status)
     students = students.distinct()
     sort = request.GET.get('sort', 'full_name')
-    if sort in {'full_name', '-full_name', 'registration_date', '-registration_date'} and hasattr(students, 'order_by'):
+    if sort in {'full_name', '-full_name', 'registration_date', '-registration_date'}:
         students = students.order_by(sort)
     page = Paginator(students, 25).get_page(request.GET.get('page'))
-    return render(request, 'students/list.html', {'students': page, 'page_obj': page, 'page_title': 'Students', 'query': query, 'status_filter': status, 'sort': sort, 'styles': DanceStyle.objects.filter(is_active=True), 'teachers': Teacher.objects.filter(is_active=True), 'style_filter': style_id, 'teacher_filter': teacher_id, 'payment_filter': payment_status})
+    return render(request, 'students/list.html', {
+        'students': page, 'page_obj': page, 'page_title': 'Students',
+        'query': query, 'status_filter': status, 'sort': sort,
+        'teachers': Teacher.objects.filter(is_active=True),
+        'teacher_filter': teacher_id, 'payment_filter': payment_status,
+    })
 
 
 @login_required
@@ -70,15 +74,16 @@ def student_create(request):
             student = form.save()
             package = form.cleaned_data.get('package')
             if package:
+                admission_fee = form.cleaned_data.get('admission_fee') or Decimal('1000')
                 enrollment = Enrollment.objects.create(
                     student=student,
                     package=package,
                     dance_style_snapshot=package.dance_style,
                     teacher=form.cleaned_data.get('teacher'),
-                    entry_date=form.cleaned_data['entry_date'],
-                    exit_date=form.cleaned_data['exit_date'],
-                    total_fee=package.price,
-                    amount_paid=form.cleaned_data.get('amount_paid') or 0,
+                    entry_date=form.cleaned_data.get('entry_date') or timezone.localdate(),
+                    exit_date=form.cleaned_data.get('exit_date'),
+                    total_fee=package.price + admission_fee,
+                    amount_paid=form.cleaned_data.get('amount_paid') or Decimal('0'),
                     payment_status=form.cleaned_data.get('payment_status') or 'PENDING',
                     package_term=form.cleaned_data.get('package_term') or '',
                     payment_method=form.cleaned_data.get('payment_method') or '',
@@ -88,33 +93,40 @@ def student_create(request):
                 invoice = _make_invoice(enrollment)
                 messages.success(request, f'Student "{student.full_name}" added and enrolled. Invoice {invoice.invoice_number} created.')
                 return redirect('billing:detail', pk=invoice.pk)
-        messages.success(request, f'Student "{student.full_name}" created successfully. You can enroll them later.')
+        messages.success(request, f'Student "{student.full_name}" created. You can enroll them later.')
         return redirect('students:detail', pk=student.pk)
     return render(request, 'students/form.html', {'form': form, 'form_action': 'students:create', 'page_title': 'Add Student'})
 
 
 @login_required
 def student_detail(request, pk):
-    student = get_object_or_404(Student.objects.prefetch_related('enrollments__package', 'enrollments__dance_style_snapshot', 'enrollments__teacher', 'enrollments__time_slot', 'enrollments__payments'), pk=pk)
+    student = get_object_or_404(Student.objects.prefetch_related(
+        'enrollments__package', 'enrollments__dance_style_snapshot',
+        'enrollments__teacher', 'enrollments__time_slot', 'enrollments__payments'
+    ), pk=pk)
     history = []
     for enrollment in student.enrollments.all():
         history.append({
             'package_name': enrollment.package.name,
-            'style': enrollment.dance_style_snapshot.name,
+            'style': enrollment.dance_style_snapshot.name if enrollment.dance_style_snapshot else '',
             'entry_date': enrollment.entry_date,
             'exit_date': enrollment.exit_date,
             'status': enrollment.status,
             'amount': enrollment.total_fee,
             'balance': enrollment.balance_due,
+            'teacher': enrollment.teacher,
             'time_slot': enrollment.time_slot,
             'payments': enrollment.payments.all(),
         })
+    active = student.active_enrollment
     return render(request, 'students/detail.html', {
         'student': student,
         'enrollments': history,
         'current_package': student.current_package,
-        'assigned_teacher': student.active_enrollment.teacher if student.active_enrollment and student.active_enrollment.teacher else None,
-        'current_invoice': student.active_enrollment.invoices.order_by('-issued_date').first() if student.active_enrollment else None,
+        'active_enrollment': active,
+        'assigned_teacher': active.teacher if active else None,
+        'current_time_slot': active.time_slot if active else None,
+        'current_invoice': active.invoices.order_by('-issued_date').first() if active else None,
         'page_title': student.full_name,
     })
 
@@ -122,12 +134,18 @@ def student_detail(request, pk):
 @login_required
 def student_edit(request, pk):
     student = get_object_or_404(Student.objects, pk=pk)
-    form = StudentForm(request.POST or None, request.FILES or None, instance=student)
+    form = StudentForm(request.POST or None, instance=student)
     if form.is_valid():
         form.save()
         messages.success(request, f'Student "{student.full_name}" updated successfully.')
         return redirect('students:detail', pk=pk)
-    return render(request, 'students/form.html', {'form': form, 'student': student, 'form_action': 'students:edit', 'form_action_kwargs': {'pk': pk}, 'page_title': 'Edit Student'})
+    active = student.active_enrollment
+    return render(request, 'students/form.html', {
+        'form': form, 'student': student,
+        'active_enrollment': active,
+        'form_action': 'students:edit', 'form_action_kwargs': {'pk': pk},
+        'page_title': 'Edit Student',
+    })
 
 
 @login_required

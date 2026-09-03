@@ -40,16 +40,6 @@
                 </a>
             </li>
             <li>
-                <a href="{% url 'styles:list' %}" class="group flex items-center px-3 py-2.5 rounded-lg transition-colors {% if request.resolver_match.app_name == 'styles' and request.resolver_match.url_name == 'list' %}text-accent-gold bg-bg-elevated-2 border-l-3 border-accent-gold{% else %}text-text-secondary hover:text-text-primary hover:bg-bg-elevated-2{% endif %}">
-                    <span class="w-5 h-5 mr-3 flex items-center justify-center {% if request.resolver_match.app_name == 'styles' and request.resolver_match.url_name == 'list' %}text-accent-gold{% endif %}">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h10M7 16h10" />
-                        </svg>
-                    </span>
-                    <span class="{% if request.resolver_match.app_name == 'styles' and request.resolver_match.url_name == 'list' %}font-medium{% endif %}">Dance Styles</span>
-                </a>
-            </li>
-            <li>
                 <a href="{% url 'billing:list' %}" class="group flex items-center px-3 py-2.5 rounded-lg transition-colors {% if request.resolver_match.app_name == 'billing' and request.resolver_match.url_name == 'list' %}text-accent-gold bg-bg-elevated-2 border-l-3 border-accent-gold{% else %}text-text-secondary hover:text-text-primary hover:bg-bg-elevated-2{% endif %}">
                     <span class="w-5 h-5 mr-3 flex items-center justify-center {% if request.resolver_match.app_name == 'billing' and request.resolver_match.url_name == 'list' %}text-accent-gold{% endif %}">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

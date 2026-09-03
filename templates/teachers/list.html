@@ -18,7 +18,6 @@
     </div>
     <form method="get" class="flex flex-wrap gap-3 mb-5 bg-bg-elevated-1 border border-border-hairline rounded-lg p-4">
         <label class="sr-only" for="teacher-search">Search teachers</label><input id="teacher-search" name="q" value="{{ query }}" placeholder="Search name, phone, or email" class="flex-1 min-w-56 px-3 py-2 rounded border border-border-hairline">
-        <select name="style" aria-label="Filter by dance style" class="px-3 py-2 rounded border border-border-hairline"><option value="">All styles</option>{% for style in styles %}<option value="{{ style.pk }}" {% if style_filter == style.pk|stringformat:'s' %}selected{% endif %}>{{ style.name }}</option>{% endfor %}</select>
         <select name="sort" aria-label="Sort teachers" class="px-3 py-2 rounded border border-border-hairline"><option value="full_name">Name A-Z</option><option value="-full_name">Name Z-A</option><option value="active_students">Most active students</option><option value="-active_students">Fewest active students</option><option value="pay_rate">Pay rate low-high</option><option value="-pay_rate">Pay rate high-low</option></select><button class="bg-accent-gold text-white px-4 py-2 rounded">Filter</button>
     </form>
 
@@ -30,7 +29,6 @@
                     <th class="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Teacher</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Phone</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Email</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Styles</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Students</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Pay</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Status</th>
@@ -43,15 +41,14 @@
                     <td class="px-4 py-3 text-sm font-medium text-text-primary">{{ teacher.full_name }}</td>
                     <td class="px-4 py-3 text-sm text-text-secondary">{{ teacher.phone }}</td>
                     <td class="px-4 py-3 text-sm text-text-secondary">{{ teacher.email }}</td>
-                    <td class="px-4 py-3">
-                        <div class="flex flex-wrap gap-1">
-                            {% for style in teacher.assigned_styles.all %}
-                            <span class="text-xs bg-accent-gold-muted text-accent-gold px-2 py-0.5 rounded-full">{{ style }}</span>
-                            {% endfor %}
-                        </div>
-                    </td>
                     <td class="px-4 py-3 text-sm text-text-primary">{{ teacher.active_assigned_student_count }}/{{ teacher.total_historical_students }}</td>
-                    <td class="px-4 py-3 text-sm text-text-primary">{{ currency_symbol }}{{ teacher.monthly_wage_estimate|floatformat:0 }}/mo</td>
+                    <td class="px-4 py-3 text-sm text-text-primary">
+                        {% if teacher.pay_type == 'PERCENTAGE' %}
+                        <span class="text-accent-gold font-medium">{{ teacher.pay_percentage }}%</span> <span class="text-text-secondary text-xs">of fees</span>
+                        {% else %}
+                        {{ currency_symbol }}{{ teacher.monthly_wage_estimate|floatformat:0 }}/mo
+                        {% endif %}
+                    </td>
                     <td class="px-4 py-3">
                         {% if teacher.is_active %}
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-status-active/20 text-status-active border border-status-active/40">Active</span>

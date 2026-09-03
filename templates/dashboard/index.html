@@ -76,24 +76,6 @@
             </div>
         </div>
 
-        <!-- Top Styles -->
-        <div class="rounded-lg border border-border-hairline bg-bg-elevated-1 p-4">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-semibold text-text-primary">Top Dance Styles</h2>
-                <a href="/styles/" class="text-sm text-accent-gold hover:text-accent-gold-hover">Manage Styles</a>
-            </div>
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-                {% for style in top_styles %}
-                <div class="flex flex-col items-center text-center p-4 rounded-lg bg-bg-base border border-border-hairline">
-                    <p class="text-accent-gold font-display font-bold text-lg">{{ style.name }}</p>
-                    <p class="text-text-secondary text-sm">{{ style.enrollments }} students</p>
-                </div>
-                {% empty %}
-                <p class="text-text-secondary text-sm text-center py-4 col-span-full">No styles available</p>
-                {% endfor %}
-            </div>
-        </div>
-
         <!-- Expiring Soon Students -->
         {% if expiring_soon_students %}
         <div class="rounded-lg border border-border-hairline bg-bg-elevated-1 p-4">
@@ -110,7 +92,7 @@
                         </div>
                         <div>
                             <p class="text-text-primary text-sm font-medium">{{ enrollment.student.full_name }}</p>
-                            <p class="text-text-secondary text-xs">{{ enrollment.package.name }} ({{ enrollment.dance_style_snapshot.name }})</p>
+                            <p class="text-text-secondary text-xs">{{ enrollment.package.name }}</p>
                         </div>
                     </div>
                     <div class="text-right">
