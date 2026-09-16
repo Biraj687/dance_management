@@ -16,11 +16,14 @@
   {% else %}
   <form method="post" class="form-panel bg-bg-elevated-1 border border-border-hairline rounded-lg p-6">{% csrf_token %}
     <section class="form-section"><h2 class="form-section-title">4. Package & Payment Record</h2>
-    {% for field in form %}<div class="field-wrap"><label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>{{ field }}{% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}</div>{% endfor %}
+    <p class="text-xs text-text-secondary mb-4">Choose a package; the total fee is filled in automatically and the class-time list is limited to that package.</p>
+    {% for field in form %}<div class="field-wrap"><label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>{{ field }}{% if field.help_text %}<p class="text-xs text-text-secondary mt-1">{{ field.help_text }}</p>{% endif %}{% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}</div>{% endfor %}
+    {% include 'students/partials/fee_summary.html' %}
     <p class="text-xs text-text-secondary border-l-2 border-accent-gold pl-3">Certificate will be provided for 6-Month & Yearly Package only.</p></section>
     {% if form.non_field_errors %}<div class="text-status-expired">{{ form.non_field_errors }}</div>{% endif %}
     <button class="bg-accent-gold text-white font-medium py-2.5 px-5 rounded-lg">Save Enrollment</button>
   </form>
+  {% include 'students/partials/fee_and_slots_script.html' %}
   {% endif %}
 </div>
 {% endblock %}

@@ -1,0 +1,135 @@
+{# Shared progressive enhancement for the admission and enrollment forms. #}
+{# The package select carries data-package-info ({pk: {name, price, duration}}) #}
+{# and the class-time select carries data-slot-map ({package_pk: [{value, label}]}); #}
+{# both are emitted by students/forms.py. Without JavaScript the server keeps the #}
+{# full option list and rejects a package/time-slot mismatch on submit. #}
+<script>
+  (function () {
+    'use strict';
+
+    var packageSelect = document.getElementById('id_package');
+    var slotSelect = document.getElementById('id_time_slot');
+    if (!packageSelect && !slotSelect) { return; }
+
+    var packageInfo = {};
+    var slotMap = {};
+    try {
+      packageInfo = JSON.parse((packageSelect && packageSelect.dataset.packageInfo) || '{}');
+    } catch (err) { packageInfo = {}; }
+    try {
+      slotMap = JSON.parse((slotSelect && slotSelect.dataset.slotMap) || '{}');
+    } catch (err) { slotMap = {}; }
+
+    var admissionInput = document.getElementById('id_admission_fee');
+    var totalFeeInput = document.getElementById('id_total_fee');
+    var summary = document.getElementById('fee-summary');
+
+    var emptyLabel = 'Any time (no fixed class slot)';
+    var choosePackageLabel = 'Choose a package first';
+    if (slotSelect) {
+      var firstOption = slotSelect.querySelector('option[value=""]');
+      if (firstOption && firstOption.textContent) {
+        emptyLabel = firstOption.textContent;
+      }
+    }
+
+    // True when the package <select> offers real choices to pick from.
+    function packageChoicesExist() {
+      if (!packageSelect) { return false; }
+      return Object.keys(packageInfo).length > 0;
+    }
+
+    function toNumber(input, fallback) {
+      if (!input) { return fallback; }
+      var value = parseFloat(input.value);
+      return isNaN(value) ? fallback : value;
+    }
+
+    function money(value) {
+      return '\u0930\u0942 ' + Number(value).toFixed(2);
+    }
+
+    function selectedPackage() {
+      if (!packageSelect) { return null; }
+      return packageInfo[packageSelect.value] || null;
+    }
+
+    // Show only the class times the chosen package actually offers.
+    function refreshSlotOptions() {
+      if (!slotSelect) { return; }
+      var packageId = packageSelect ? packageSelect.value : '';
+      var allowed = (packageId && slotMap[packageId]) ? slotMap[packageId] : null;
+      var previous = slotSelect.value;
+
+      slotSelect.innerHTML = '';
+
+      var placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = allowed
+        ? emptyLabel
+        : (packageChoicesExist() ? choosePackageLabel : 'No class times configured');
+      slotSelect.appendChild(placeholder);
+
+      if (allowed) {
+        allowed.forEach(function (slot) {
+          var option = document.createElement('option');
+          option.value = slot.value;
+          option.textContent = slot.label;
+          slotSelect.appendChild(option);
+        });
+      }
+
+      slotSelect.disabled = !allowed;
+      if (allowed && allowed.some(function (slot) { return slot.value === previous; })) {
+        slotSelect.value = previous;
+      }
+    }
+
+    // package price + admission fee, recomputed on every change.
+    function refreshFeeSummary() {
+      var pkg = selectedPackage();
+      var admission = toNumber(admissionInput, 1000);
+      var price = pkg ? parseFloat(pkg.price) || 0 : 0;
+      var total = price + admission;
+
+      if (summary) {
+        var nameEl = summary.querySelector('[data-fee-package-name]');
+        var priceEl = summary.querySelector('[data-fee-package-price]');
+        var admissionEl = summary.querySelector('[data-fee-admission]');
+        var totalEl = summary.querySelector('[data-fee-total]');
+        var hintEl = summary.querySelector('[data-fee-hint]');
+        if (nameEl) { nameEl.textContent = pkg ? pkg.name : 'No package selected yet'; }
+        if (priceEl) { priceEl.textContent = pkg ? money(price) : '\u2014'; }
+        if (admissionEl) { admissionEl.textContent = pkg ? money(admission) : '\u2014'; }
+        if (totalEl) { totalEl.textContent = pkg ? money(total) : '\u2014'; }
+        if (hintEl) {
+          hintEl.textContent = pkg
+            ? 'Total fee = package price + admission fee. It is auto-calculated and saved on the enrollment.'
+            : 'Pick a package to see its price and the total fee.';
+        }
+      }
+
+      if (totalFeeInput && pkg && !totalFeeInput.readOnly) {
+        totalFeeInput.value = total.toFixed(2);
+      } else if (totalFeeInput && totalFeeInput.value === '') {
+        // Renewal form: keep the visible fee field in step with the package too.
+        totalFeeInput.value = total.toFixed(2);
+      }
+    }
+
+    function refreshAll() {
+      refreshSlotOptions();
+      refreshFeeSummary();
+    }
+
+    if (packageSelect) {
+      packageSelect.addEventListener('change', refreshAll);
+    }
+    if (admissionInput) {
+      admissionInput.addEventListener('input', refreshFeeSummary);
+      admissionInput.addEventListener('change', refreshFeeSummary);
+    }
+
+    refreshAll();
+  })();
+</script>

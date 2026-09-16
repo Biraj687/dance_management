@@ -1,10 +1,49 @@
-from django import forms
-from django.utils import timezone
+import json
 from decimal import Decimal
 
+from django import forms
+from django.utils import timezone
+
 from core.forms import BSDateField
-from .models import Enrollment, Student
 from packages.models import PackageTimeSlot
+from .models import Enrollment, Student
+
+
+def _money_str(value):
+    """Render a Decimal as a plain number the browser can add up."""
+    return str(Decimal(value).quantize(Decimal('0.01')))
+
+
+def _json_attr(value):
+    """Return raw JSON to be used as a widget attribute value.
+
+    Django escapes ``"`` to ``"`` while rendering an attribute and the
+    browser decodes it again before exposing it through ``dataset``, so the
+    JSON round-trips without any manual escaping.
+    """
+    return json.dumps(value)
+
+
+def _package_attr_data(packages):
+    """Price/duration metadata used by the live total-fee summary."""
+    return {
+        str(package.pk): {
+            'name': package.name,
+            'price': _money_str(package.price),
+            'duration': package.get_duration_display(),
+        }
+        for package in packages
+    }
+
+
+def _slot_attr_data(slots):
+    """Group class-time option values by the package that offers them."""
+    grouped = {}
+    for slot in slots:
+        grouped.setdefault(str(slot.package_id), []).append(
+            {'value': str(slot.pk), 'label': str(slot)}
+        )
+    return grouped
 
 
 class StudentForm(forms.ModelForm):
@@ -36,17 +75,27 @@ class StudentForm(forms.ModelForm):
         if not self._is_edit:
             from packages.models import Package
             from teachers.models import Teacher
+            active_packages = Package.objects.filter(is_active=True)
+            active_slots = PackageTimeSlot.objects.select_related('package').filter(package__is_active=True)
             self.fields['package'] = forms.ModelChoiceField(
-                queryset=Package.objects.filter(is_active=True),
-                required=False, label='Package'
+                queryset=active_packages,
+                required=False, label='Package',
+                widget=forms.Select(attrs={
+                    'data-package-info': _json_attr(_package_attr_data(active_packages)),
+                }),
             )
             self.fields['teacher'] = forms.ModelChoiceField(
                 queryset=Teacher.objects.filter(is_active=True),
                 required=False, label='Assigned Teacher'
             )
             self.fields['time_slot'] = forms.ModelChoiceField(
-                queryset=PackageTimeSlot.objects.select_related('package').filter(package__is_active=True),
-                required=False, label='Class Time'
+                queryset=active_slots,
+                required=False, label='Class Time',
+                empty_label='Any time (no fixed class slot)',
+                widget=forms.Select(attrs={
+                    'data-slot-map': _json_attr(_slot_attr_data(active_slots)),
+                }),
+                help_text='Only the class times offered by the selected package are listed.',
             )
             self.fields['entry_date'] = BSDateField(
                 required=False,
@@ -102,13 +151,21 @@ class StudentForm(forms.ModelForm):
                     if package.duration_unit == 'WEEK'
                     else relativedelta(months=package.duration_value)
                 )
+            if time_slot and time_slot.package_id != package.pk:
+                # The dropdown is filtered client-side, but a stale or forged
+                # POST can still send a slot that another package runs. Drop it
+                # instead of saving a mismatched enrollment.
+                cleaned['time_slot'] = None
+                self.add_error(
+                    'time_slot',
+                    'That class time is not offered by the selected package. '
+                    'Choose one of its available times.',
+                )
             amount_paid = cleaned.get('amount_paid') or Decimal('0')
             admission_fee = cleaned.get('admission_fee') or Decimal('1000')
             total = package.price + admission_fee
             if amount_paid > total:
                 self.add_error('amount_paid', 'Amount paid cannot exceed total fee (package + admission fee).')
-            if time_slot and time_slot.package_id != package.pk:
-                self.add_error('time_slot', 'Choose a class time offered by the selected package.')
         return cleaned
 
 
@@ -135,7 +192,22 @@ class EnrollmentForm(forms.ModelForm):
         self.fields['total_fee'].required = False
         self.fields['package'].queryset = self.fields['package'].queryset.filter(is_active=True)
         self.fields['teacher'].queryset = self.fields['teacher'].queryset.filter(is_active=True)
-        self.fields['time_slot'].queryset = PackageTimeSlot.objects.select_related('package').filter(package__is_active=True)
+        active_slots = list(
+            PackageTimeSlot.objects.select_related('package').filter(package__is_active=True)
+        )
+        self.fields['time_slot'].queryset = PackageTimeSlot.objects.filter(
+            pk__in=[slot.pk for slot in active_slots]
+        )
+        self.fields['time_slot'].empty_label = 'Any time (no fixed class slot)'
+        self.fields['time_slot'].help_text = (
+            'Only the class times offered by the selected package are listed.'
+        )
+        self.fields['time_slot'].widget.attrs['data-slot-map'] = _json_attr(
+            _slot_attr_data(active_slots)
+        )
+        self.fields['package'].widget.attrs['data-package-info'] = _json_attr(
+            _package_attr_data(self.fields['package'].queryset)
+        )
         if not self.instance.pk and not self.initial.get('entry_date'):
             from django.utils import timezone
             self.initial['entry_date'] = timezone.localdate()
@@ -145,7 +217,14 @@ class EnrollmentForm(forms.ModelForm):
         package = cleaned.get('package')
         time_slot = cleaned.get('time_slot')
         if package and time_slot and time_slot.package_id != package.pk:
-            self.add_error('time_slot', 'Choose a class time offered by the selected package.')
+            # See StudentForm.clean: a forged/stale POST must not save a slot
+            # that belongs to a different package.
+            cleaned['time_slot'] = None
+            self.add_error(
+                'time_slot',
+                'That class time is not offered by the selected package. '
+                'Choose one of its available times.',
+            )
         entry_date = cleaned.get('entry_date')
         admission_fee = cleaned.get('admission_fee') or Decimal('1000')
         if package and not self.instance.pk:

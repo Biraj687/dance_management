@@ -9,8 +9,13 @@ change cannot silently reintroduce the old behaviour:
 4. The assigned teacher can be changed and the change is written to the audit log
    that is displayed on the student detail page.
 5. Packages render without any dance-style suffix such as ``3 months (hiphop)``.
+6. Choosing a package on the admission/renewal form reveals the total fee
+   (package price + admission fee) and limits the Class Time dropdown to the
+   class times that package actually offers.
 """
 
+import html as html_module
+import json
 import re
 import tempfile
 from datetime import timedelta
@@ -23,7 +28,7 @@ from django.utils import timezone
 
 from billing.models import AuditLog
 from core.dates import format_bs, format_bs_iso, to_bs_input
-from packages.models import Package
+from packages.models import Package, PackageTimeSlot
 from teachers.models import Teacher
 from .models import Enrollment, Student
 
@@ -151,3 +156,117 @@ class PackageDisplayTests(TestCase):
         self.assertEqual(package.get_duration_display(), '3 Months')
         self.assertNotIn('(', str(package))
         self.assertNotIn('hiphop', str(package).lower())
+
+
+def _select_data_attribute(html, field_name, attribute):
+    """Pull a JSON data-* attribute off a rendered <select name="field">."""
+    match = re.search(
+        r'<select[^>]*name="%s"[^>]*%s="([^"]*)"' % (re.escape(field_name), re.escape(attribute)),
+        html,
+        re.S,
+    )
+    if match is None:
+        return None
+    return json.loads(html_module.unescape(match.group(1)))
+
+
+@override_settings(MEDIA_ROOT=tempfile.mkdtemp())
+class PackageFeeAndClassTimeTests(TestCase):
+    """Picking a package drives the live total fee and the class-time options."""
+
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(username='fee-admin', password='Strong-password-123')
+        self.client.force_login(self.user)
+        self.monthly = Package.objects.create(
+            name='Monthly Salsa', duration_value=1, duration_unit='MONTH', price=Decimal('12000'),
+        )
+        self.yearly = Package.objects.create(
+            name='Yearly Salsa', duration_value=12, duration_unit='MONTH', price=Decimal('60000'),
+        )
+        self.monthly_slot = PackageTimeSlot.objects.create(
+            package=self.monthly, start_time='17:00', end_time='19:00',
+        )
+        self.yearly_slot = PackageTimeSlot.objects.create(
+            package=self.yearly, start_time='07:00', end_time='09:00',
+        )
+        self.today = timezone.localdate()
+
+    def _admission_payload(self, **overrides):
+        payload = {
+            'full_name': 'Fee Student', 'phone': '+9779817000000', 'is_active': 'on',
+            'package': self.monthly.pk, 'time_slot': self.monthly_slot.pk,
+            'admission_fee': '1000',
+            'entry_date': to_bs_input(self.today),
+            'exit_date': to_bs_input(self.today + timedelta(days=30)),
+            'amount_paid': '0', 'payment_status': 'PENDING',
+        }
+        payload.update(overrides)
+        return payload
+
+    def test_package_select_exposes_prices_for_the_live_total(self):
+        html = self.client.get(reverse('students:create')).content.decode()
+        info = _select_data_attribute(html, 'package', 'data-package-info')
+        self.assertIsNotNone(info, 'The package <select> must carry data-package-info JSON.')
+        self.assertEqual(info[str(self.monthly.pk)]['price'], '12000.00')
+        self.assertEqual(info[str(self.yearly.pk)]['price'], '60000.00')
+        self.assertEqual(info[str(self.monthly.pk)]['name'], 'Monthly Salsa')
+        # The live summary box the script writes into must be on the page.
+        self.assertIn('data-fee-total', html)
+        self.assertIn('id="id_admission_fee"', html)
+
+    def test_time_slot_map_lists_only_the_selected_packages_times(self):
+        html = self.client.get(reverse('students:create')).content.decode()
+        slot_map = _select_data_attribute(html, 'time_slot', 'data-slot-map')
+        self.assertIsNotNone(slot_map, 'The class-time <select> must carry data-slot-map JSON.')
+        self.assertEqual(
+            [slot['value'] for slot in slot_map[str(self.monthly.pk)]],
+            [str(self.monthly_slot.pk)],
+        )
+        self.assertEqual(
+            [slot['value'] for slot in slot_map[str(self.yearly.pk)]],
+            [str(self.yearly_slot.pk)],
+        )
+        self.assertNotEqual(slot_map[str(self.monthly.pk)], slot_map[str(self.yearly.pk)])
+
+    def test_admission_form_renders_the_live_fee_summary(self):
+        html = self.client.get(reverse('students:create')).content.decode()
+        self.assertIn('id="fee-summary"', html)
+        self.assertIn('Total payable', html)
+
+    def test_total_fee_is_auto_calculated_from_package_plus_admission_fee(self):
+        response = self.client.post(reverse('students:create'), self._admission_payload())
+        self.assertEqual(
+            response.status_code, 302,
+            response.context['form'].errors if response.status_code == 200 else '',
+        )
+        enrollment = Enrollment.objects.get(student__full_name='Fee Student')
+        self.assertEqual(enrollment.total_fee, Decimal('13000'))
+        self.assertEqual(enrollment.time_slot_id, self.monthly_slot.pk)
+
+    def test_total_fee_uses_the_chosen_package_price(self):
+        response = self.client.post(
+            reverse('students:create'),
+            self._admission_payload(
+                full_name='Yearly Student',
+                package=self.yearly.pk,
+                time_slot=self.yearly_slot.pk,
+                admission_fee='2000',
+            ),
+        )
+        self.assertEqual(
+            response.status_code, 302,
+            response.context['form'].errors if response.status_code == 200 else '',
+        )
+        enrollment = Enrollment.objects.get(student__full_name='Yearly Student')
+        self.assertEqual(enrollment.total_fee, Decimal('62000'))
+
+    def test_a_slot_from_another_package_is_rejected(self):
+        response = self.client.post(
+            reverse('students:create'),
+            self._admission_payload(
+                full_name='Mismatch Student', time_slot=self.yearly_slot.pk,
+            ),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('time_slot', response.context['form'].errors)
+        self.assertFalse(Student.objects.filter(full_name='Mismatch Student').exists())

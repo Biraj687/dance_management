@@ -60,9 +60,9 @@
             <p class="text-xs text-text-secondary mt-1">{{ field.help_text }}</p>
             {% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
           </div>{% endif %}{% endfor %}
-          <p class="text-xs text-text-secondary md:col-span-2">Total fee = Package price + Admission fee. The total will be auto-calculated and saved on the enrollment.</p>
         </div>
       </div>
+      {% include 'students/partials/fee_summary.html' %}
       <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-5">
         {% for field in form %}{% if field.name == 'entry_date' or field.name == 'exit_date' or field.name == 'package_term' or field.name == 'payment_method' or field.name == 'amount_paid' or field.name == 'payment_status' %}
         <div class="field-wrap">
@@ -91,4 +91,5 @@
     </div>
   </form>
 </div>
+{% include 'students/partials/fee_and_slots_script.html' %}
 {% endblock %}
