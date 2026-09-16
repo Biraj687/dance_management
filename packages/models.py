@@ -7,7 +7,7 @@ from core.models import TimeStampedModel, SoftDeleteModel
 
 class Package(SoftDeleteModel):
     """
-    Represents a pricing package for a dance style.
+    Represents a pricing package (name + duration + price).
     """
     DURATION_UNITS = [
         ('WEEK', 'Weeks'),
@@ -17,12 +17,6 @@ class Package(SoftDeleteModel):
     name = models.CharField(
         max_length=150,
         verbose_name='Package Name'
-    )
-    dance_style = models.ForeignKey(
-        'styles.DanceStyle',
-        on_delete=models.PROTECT,
-        related_name='packages',
-        verbose_name='Dance Style'
     )
     duration_value = models.PositiveIntegerField(
         verbose_name='Duration Value'
@@ -45,10 +39,10 @@ class Package(SoftDeleteModel):
     class Meta:
         verbose_name = 'Package'
         verbose_name_plural = 'Packages'
-        ordering = ['dance_style', 'name']
+        ordering = ['name']
 
     def __str__(self):
-        return f"{self.name} ({self.dance_style.name})"
+        return self.name
 
     def get_duration_display(self):
         """Return human-readable duration."""

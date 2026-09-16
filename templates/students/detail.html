@@ -3,6 +3,13 @@
 {% block title %}{{ studio_name }} - {{ student.full_name }}{% endblock %}
 {% block page_title %}{{ student.full_name }}{% endblock %}
 {% block content %}
+{% if messages %}
+<div class="space-y-2 mb-6">
+    {% for message in messages %}
+    <div class="rounded-lg px-4 py-3 text-sm border {% if message.tags == 'error' %}bg-status-expired/10 border-status-expired/40 text-status-expired{% elif message.tags == 'success' %}bg-status-active/10 border-status-active/40 text-status-active{% else %}bg-bg-elevated-1 border-border-hairline text-text-secondary{% endif %}">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <div class="lg:col-span-1">
         <div class="bg-bg-elevated-1 border border-border-hairline rounded-lg p-6 text-center">
@@ -54,6 +61,22 @@
             </div>
         </div>
         <div class="bg-bg-elevated-1 border border-border-hairline rounded-lg p-6 mt-6">
+            <h2 class="text-lg font-semibold text-text-primary mb-4">Assigned Teacher</h2>
+            {% if teacher_form %}
+            <form method="post" action="{% url 'students:change_teacher' student.id %}" class="flex flex-wrap items-end gap-3">
+                {% csrf_token %}
+                <div class="field-wrap flex-1 min-w-56">
+                    <label for="{{ teacher_form.teacher.id_for_label }}" class="block text-sm font-medium text-text-secondary mb-1">{{ teacher_form.teacher.label }}</label>
+                    {{ teacher_form.teacher }}
+                </div>
+                <button type="submit" class="px-4 py-2 bg-accent-gold hover:bg-accent-gold-hover text-white rounded-lg transition-colors">Change Teacher</button>
+            </form>
+            <p class="text-xs text-text-secondary mt-2">Every change is recorded in the audit log below.</p>
+            {% else %}
+            <p class="text-text-secondary">No active enrollment, so there is no teacher to reassign.</p>
+            {% endif %}
+        </div>
+        <div class="bg-bg-elevated-1 border border-border-hairline rounded-lg p-6 mt-6">
             <h2 class="text-lg font-semibold text-text-primary mb-4">Enrollment History</h2>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
@@ -101,6 +124,21 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+        <div class="bg-bg-elevated-1 border border-border-hairline rounded-lg p-6 mt-6">
+            <h2 class="text-lg font-semibold text-text-primary mb-4">Audit Log</h2>
+            {% if audit_logs %}
+            <ul class="space-y-2">
+                {% for log in audit_logs %}
+                <li class="text-sm border-b border-border-hairline last:border-0 pb-2">
+                    <span class="text-text-primary">{{ log.change_summary }}</span>
+                    <span class="text-text-secondary"> — {{ log.get_action_display }}{% if log.user %} by {{ log.user }}{% endif %} · {{ log.timestamp|to_bs_short }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-text-secondary">No changes recorded yet.</p>
+            {% endif %}
         </div>
     </div>
 </div>

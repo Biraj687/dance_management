@@ -8,8 +8,8 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
+from core.dates import to_bs_input
 from packages.models import Package
-from styles.models import DanceStyle
 from teachers.models import Teacher
 from .forms import EnrollmentForm
 from .models import Enrollment, Student
@@ -31,13 +31,12 @@ class EnrollmentRulesTests(TestCase):
 
     @override_settings(MEDIA_ROOT=tempfile.mkdtemp())
     def setUp(self):
-        self.style = DanceStyle.objects.create(name='Salsa')
-        self.package = Package.objects.create(name='Monthly Salsa', dance_style=self.style, duration_value=1, duration_unit='MONTH', price=Decimal('12000'))
+        self.package = Package.objects.create(name='Monthly Salsa', duration_value=1, duration_unit='MONTH', price=Decimal('12000'))
         self.teacher = Teacher.objects.create(full_name='Maya Thapa', phone='+9779811111111', email='maya@example.com', pay_rate=Decimal('2000'))
         self.student = Student.objects.create(full_name='Priya Sharma', phone='+9779812222222')
 
     def make_enrollment(self, entry, exit_date, active=True):
-        return Enrollment.objects.create(student=self.student, package=self.package, dance_style_snapshot=self.style, teacher=self.teacher, entry_date=entry, exit_date=exit_date, total_fee=Decimal('12000'), is_active=active)
+        return Enrollment.objects.create(student=self.student, package=self.package, teacher=self.teacher, entry_date=entry, exit_date=exit_date, total_fee=Decimal('12000'), is_active=active)
 
     def test_status_boundaries(self):
         today = timezone.localdate()
@@ -46,7 +45,7 @@ class EnrollmentRulesTests(TestCase):
         self.assertEqual(self.make_enrollment(today - timedelta(days=2), today - timedelta(days=1), False).status, 'EXPIRED')
 
     def test_overpayment_is_rejected(self):
-        enrollment = Enrollment(student=self.student, package=self.package, dance_style_snapshot=self.style, entry_date=timezone.localdate(), exit_date=timezone.localdate() + timedelta(days=1), total_fee=Decimal('10'), amount_paid=Decimal('11'))
+        enrollment = Enrollment(student=self.student, package=self.package, entry_date=timezone.localdate(), exit_date=timezone.localdate() + timedelta(days=1), total_fee=Decimal('10'), amount_paid=Decimal('11'))
         with self.assertRaises(ValidationError):
             enrollment.full_clean()
 
@@ -68,17 +67,17 @@ class EnrollmentRulesTests(TestCase):
         self.client.force_login(get_user_model().objects.create_user(username='admission-admin', password='Strong-password-123'))
         response = self.client.get(reverse('students:create'))
         self.assertEqual(response.status_code, 200)
-        for field_name in ['full_name', 'date_of_birth_bs', 'father_name', 'mother_name', 'preferred_dance_styles']:
+        for field_name in ['full_name', 'date_of_birth_bs', 'father_name', 'mother_name']:
             self.assertContains(response, f'id="id_{field_name}"')
         form = StudentForm(data={
             'full_name': 'Asha Gurung', 'phone': '+9779812345678',
             'date_of_birth_bs': '2058-03-12', 'age_at_admission': '24',
             'admission_level': 'BEGINNER', 'father_name': 'Hari Gurung',
-            'preferred_dance_styles': ['SALSA', 'CULTURAL'], 'is_active': 'on',
+            'is_active': 'on',
         })
         self.assertTrue(form.is_valid(), form.errors)
         student = form.save()
-        self.assertEqual(student.preferred_dance_styles, ['SALSA', 'CULTURAL'])
+        self.assertEqual(student.full_name, 'Asha Gurung')
 
     def test_enrollment_accepts_package_term_and_payment_method(self):
         form = EnrollmentForm(data={
@@ -93,15 +92,18 @@ class EnrollmentRulesTests(TestCase):
         from django.contrib.auth import get_user_model
         admin = get_user_model().objects.create_user(username='create-admin', password='Strong-password-123')
         self.client.force_login(admin)
+        # The admission form collects B.S. (Bikram Sambat) dates, exactly as the
+        # browser would submit them, e.g. 2083-05-31.
+        today = timezone.localdate()
         response = self.client.post(reverse('students:create'), {
             'full_name': 'Mina Adhikari', 'phone': '+9779815555555',
             'email': 'mina@example.com', 'is_active': 'on',
             'package': self.package.pk, 'teacher': self.teacher.pk,
-            'entry_date': timezone.localdate(), 'exit_date': timezone.localdate() + timedelta(days=30),
+            'entry_date': to_bs_input(today), 'exit_date': to_bs_input(today + timedelta(days=30)),
             'package_term': 'MONTHLY', 'payment_method': 'CASH',
             'amount_paid': '12000', 'payment_status': 'PAID',
         })
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 302, response.context['form'].errors if response.status_code == 200 else '')
         enrollment = Enrollment.objects.get(student__full_name='Mina Adhikari')
         self.assertEqual(enrollment.package_id, self.package.pk)
         self.assertEqual(enrollment.teacher_id, self.teacher.pk)
@@ -112,11 +114,12 @@ class EnrollmentRulesTests(TestCase):
         slot = PackageTimeSlot.objects.create(package=self.package, start_time='17:00', end_time='19:00')
         from django.contrib.auth import get_user_model
         self.client.force_login(get_user_model().objects.create_user(username='time-admin', password='Strong-password-123'))
+        today = timezone.localdate()
         response = self.client.post(reverse('students:create'), {
             'full_name': 'Time Slot Student', 'phone': '+9779815666666', 'is_active': 'on',
             'package': self.package.pk, 'time_slot': slot.pk, 'teacher': self.teacher.pk,
-            'entry_date': timezone.localdate(), 'exit_date': timezone.localdate() + timedelta(days=30),
+            'entry_date': to_bs_input(today), 'exit_date': to_bs_input(today + timedelta(days=30)),
             'package_term': 'MONTHLY', 'payment_method': 'CASH', 'amount_paid': '0', 'payment_status': 'PENDING',
         })
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 302, response.context['form'].errors if response.status_code == 200 else '')
         self.assertEqual(Enrollment.objects.get(student__full_name='Time Slot Student').time_slot_id, slot.pk)

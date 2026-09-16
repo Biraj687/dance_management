@@ -6,7 +6,7 @@
     <div class="flex items-center justify-between mb-6">
         <div>
             <h1 class="text-3xl font-display font-bold text-text-primary">{{ page_title }}</h1>
-            <p class="text-text-secondary mt-1">Manage pricing packages for your dance styles.</p>
+            <p class="text-text-secondary mt-1">Manage your pricing packages.</p>
         </div>
         <a href="/packages/create/" class="bg-accent-gold hover:bg-accent-gold-hover text-white font-medium py-2.5 px-5 rounded-lg transition-colors flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -15,7 +15,7 @@
             Add Package
         </a>
     </div>
-    <form method="get" class="flex gap-3 mb-5 bg-bg-elevated-1 border border-border-hairline rounded-lg p-4"><label class="sr-only" for="package-search">Search packages</label><input id="package-search" name="q" value="{{ query }}" placeholder="Search packages or styles" class="flex-1 px-3 py-2 rounded border border-border-hairline"><button class="bg-accent-gold text-white px-4 py-2 rounded">Search</button></form>
+    <form method="get" class="flex gap-3 mb-5 bg-bg-elevated-1 border border-border-hairline rounded-lg p-4"><label class="sr-only" for="package-search">Search packages</label><input id="package-search" name="q" value="{{ query }}" placeholder="Search packages" class="flex-1 px-3 py-2 rounded border border-border-hairline"><button class="bg-accent-gold text-white px-4 py-2 rounded">Search</button></form>
 
     {% if packages %}
     <div class="bg-bg-elevated-1 border border-border-hairline rounded-lg overflow-hidden">
@@ -23,7 +23,6 @@
             <thead class="bg-bg-elevated-2 border-b border-border-hairline">
                 <tr>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Name</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Style</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Duration</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Price</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Students</th>
@@ -35,7 +34,6 @@
                 {% for package in packages %}
                 <tr class="hover:bg-bg-elevated-2 transition-colors">
                     <td class="px-4 py-3 text-sm font-medium text-text-primary">{{ package.name }}</td>
-                    <td class="px-4 py-3 text-sm text-text-secondary">{{ package.dance_style }}</td>
                     <td class="px-4 py-3 text-sm text-text-primary">{{ package.get_duration_display }}</td>
                     <td class="px-4 py-3 text-sm font-medium text-accent-gold tabular-nums">{{ currency_symbol }}{{ package.price|floatformat:0 }}</td>
                     <td class="px-4 py-3 text-sm text-text-primary"><div class="font-semibold">{{ package.get_active_enrollment_count }} total students</div>{% for slot in package.time_slots.all %}<div class="text-xs text-text-secondary">{{ slot.start_time|time:'H:i' }}-{{ slot.end_time|time:'H:i' }}: <span class="text-accent-gold font-semibold">{{ slot.active_count }} students</span></div>{% empty %}<div class="text-xs text-text-secondary">No times added</div>{% endfor %}</td>

@@ -8,7 +8,6 @@ class Migration(migrations.Migration):
     dependencies = [
         ('packages', '0001_initial'),
         ('students', '0001_initial'),
-        ('styles', '0001_initial'),
         ('teachers', '0001_initial'),
     ]
 

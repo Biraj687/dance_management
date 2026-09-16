@@ -9,7 +9,6 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('styles', '0001_initial'),
     ]
 
     operations = [
@@ -26,12 +25,11 @@ class Migration(migrations.Migration):
                 ('duration_unit', models.CharField(choices=[('WEEK', 'Weeks'), ('MONTH', 'Months')], max_length=10, verbose_name='Duration Unit')),
                 ('price', models.DecimalField(decimal_places=2, max_digits=10, verbose_name='Price')),
                 ('description', models.TextField(blank=True, verbose_name='Description')),
-                ('dance_style', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='packages', to='styles.dancestyle', verbose_name='Dance Style')),
             ],
             options={
                 'verbose_name': 'Package',
                 'verbose_name_plural': 'Packages',
-                'ordering': ['dance_style', 'name'],
+                'ordering': ['name'],
             },
         ),
     ]

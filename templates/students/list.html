@@ -60,7 +60,7 @@
         <tr class="hover:bg-bg-elevated-2 transition-colors">
           <td class="px-4 py-3 text-sm font-medium text-text-primary">{{ student.full_name }}</td>
           <td class="px-4 py-3 text-sm text-text-secondary">{{ student.phone }}</td>
-          <td class="px-4 py-3 text-sm text-text-primary">{{ enr.package.name|default:'-' }}</td>
+          <td class="px-4 py-3 text-sm text-text-primary">{{ enr.package.name|default:'-' }}{% if enr.package %} <span class="text-text-secondary text-xs">· {{ enr.package.get_duration_display }}</span>{% endif %}</td>
           <td class="px-4 py-3 text-sm text-text-secondary">{{ enr.time_slot|default:'-' }}</td>
           <td class="px-4 py-3">
             {% if student.status == 'ACTIVE' %}<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-status-active/20 text-status-active border border-status-active/40">Active</span>

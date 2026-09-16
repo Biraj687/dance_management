@@ -10,9 +10,11 @@ from datetime import date, datetime
 import nepali_datetime
 from django.utils import timezone as django_timezone
 
-NEPALI_LONG = '%N %D, %K'  # भदौ २७, २०८३
-NEPALI_SHORT = '%K-%n-%D'  # २०८३-०५-२७
+NEPALI_LONG = '%N %D, %K'  # Bhadra 27, 2083
 BS_ISO = '%Y-%m-%d'        # 2083-05-27
+# ASCII compact form: every user-facing date must render as 2083-05-27, not
+# the Devanagari २०८३-०५-२७. Kept as an alias so existing callers keep working.
+NEPALI_SHORT = BS_ISO
 
 # Sensible bounds for BS dates entered by staff. This stops an accidental
 # Gregorian year such as "2026" from silently being read as BS 2026 (~AD 1970).
@@ -101,9 +103,14 @@ def parse_bs(value, min_year=BS_YEAR_MIN, max_year=BS_YEAR_MAX):
     return nepali_datetime.date(year, month, day).to_datetime_date()
 
 
-def format_bs(value, format_string=NEPALI_LONG, with_time=True):
+def format_bs(value, format_string=BS_ISO, with_time=True):
     """
     Format an AD date/datetime as Bikram Sambat.
+
+    Defaults to the ASCII ISO form (``2083-05-31``) so that no code path can
+    leak Devanagari digits such as ``२०८१-०३-०५``. Pass ``NEPALI_LONG``
+    explicitly if a written-out B.S. month name is ever needed.
+
     Strings that are already BS (e.g. date_of_birth_bs) are returned unchanged.
     """
     if value is None or value == '':
@@ -131,8 +138,8 @@ def format_bs_iso(value):
 
 
 def format_bs_short(value):
-    """Devanagari compact date: २०८३-०५-२७."""
-    return format_bs(value, NEPALI_SHORT, with_time=False)
+    """Compact BS date with ASCII digits: 2083-05-27."""
+    return format_bs(value, BS_ISO, with_time=False)
 
 
 def to_bs_input(value):
@@ -140,5 +147,5 @@ def to_bs_input(value):
     return format_bs(value, BS_ISO, with_time=False)
 
 
-def today_bs_formatted(format_string=NEPALI_LONG):
+def today_bs_formatted(format_string=BS_ISO):
     return nepali_datetime.date.today().strftime(format_string)

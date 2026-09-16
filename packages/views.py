@@ -11,10 +11,10 @@ from .models import Package, PackageTimeSlot
 @login_required
 def package_list(request):
     slots = PackageTimeSlot.objects.annotate(active_count=Count('enrollments', filter=Q(enrollments__is_active=True))).order_by('start_time')
-    packages = Package.all_objects.select_related('dance_style').prefetch_related(Prefetch('time_slots', queryset=slots)).order_by('dance_style__name', 'name')
+    packages = Package.all_objects.prefetch_related(Prefetch('time_slots', queryset=slots)).order_by('name')
     query = request.GET.get('q', '').strip()
     if query:
-        packages = packages.filter(name__icontains=query) | packages.filter(dance_style__name__icontains=query)
+        packages = packages.filter(name__icontains=query)
     packages = packages.distinct()
     page = Paginator(packages, 25).get_page(request.GET.get('page'))
     return render(request, 'packages/list.html', {'packages': page, 'page_obj': page, 'page_title': 'Packages', 'query': query})

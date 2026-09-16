@@ -62,11 +62,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='student',
-            name='preferred_dance_styles',
-            field=models.JSONField(blank=True, default=list),
-        ),
-        migrations.AddField(
-            model_name='student',
             name='previous_institute',
             field=models.CharField(blank=True, max_length=180, verbose_name='Previous Institute'),
         ),

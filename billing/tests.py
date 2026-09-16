@@ -4,10 +4,11 @@ from decimal import Decimal
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
+from core.dates import to_bs_input
 from packages.models import Package
 from students.models import Enrollment, Student
-from styles.models import DanceStyle
 
 
 class ExportTests(TestCase):
@@ -26,8 +27,7 @@ class ExportTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(username='admin@example.com', password='Strong-password-123')
         self.client.force_login(self.user)
-        self.style = DanceStyle.objects.create(name='Salsa')
-        self.package = Package.objects.create(name='Salsa Monthly', dance_style=self.style, duration_value=1, duration_unit='MONTH', price=Decimal('12000'))
+        self.package = Package.objects.create(name='Salsa Monthly', duration_value=1, duration_unit='MONTH', price=Decimal('12000'))
         Student.objects.create(full_name='Priya Sharma', phone='+9779811111111')
         Student.objects.create(full_name='Rahul Verma', phone='+9779812222222')
 
@@ -44,16 +44,18 @@ class ExportTests(TestCase):
         self.assertNotIn('Rahul Verma', response.content.decode('latin-1'))
 
     def test_payment_updates_enrollment_and_creates_history(self):
-        from datetime import date, timedelta
+        from datetime import timedelta
+        today = timezone.localdate()
         enrollment = Enrollment.objects.create(
             student=Student.objects.get(full_name='Priya Sharma'), package=self.package,
-            dance_style_snapshot=self.style, entry_date=date.today(),
-            exit_date=date.today() + timedelta(days=30), total_fee=Decimal('12000'),
+            entry_date=today,
+            exit_date=today + timedelta(days=30), total_fee=Decimal('12000'),
             amount_paid=Decimal('2000'), payment_status='PARTIAL',
         )
         invoice = enrollment.invoices.create(invoice_number='INV-TEST-0001')
-        response = self.client.post(reverse('billing:payment', args=[invoice.pk]), {'amount': '10000', 'payment_method': 'Cash', 'paid_on': date.today()})
-        self.assertEqual(response.status_code, 302)
+        # "paid_on" is a B.S. date field, so submit it the way the browser does.
+        response = self.client.post(reverse('billing:payment', args=[invoice.pk]), {'amount': '10000', 'payment_method': 'Cash', 'paid_on': to_bs_input(today)})
+        self.assertEqual(response.status_code, 302, response.context['form'].errors if response.status_code == 200 else '')
         enrollment.refresh_from_db()
         self.assertEqual(enrollment.amount_paid, Decimal('12000'))
         self.assertEqual(enrollment.balance_due, Decimal('0'))

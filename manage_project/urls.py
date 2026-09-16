@@ -11,7 +11,6 @@ urlpatterns = [
     path('students/', include('students.urls')),
     path('teachers/', include('teachers.urls')),
     path('packages/', include('packages.urls')),
-    path('styles/', include('styles.urls')),
     path('billing/', include('billing.urls')),
     path('search/', include('search.urls')),
     path('', accounts_views.root_redirect, name='root'),

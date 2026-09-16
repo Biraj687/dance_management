@@ -87,19 +87,18 @@ class DashboardStats(TimeStampedModel):
 
     @staticmethod
     def _count_expiring_soon():
-        """Count students whose active package expires within 7 days."""
-        from django.db.models import Q, F
+        """Count students whose active package expires within 10 days."""
         from datetime import timedelta
-        from students.models import Enrollment
+        from students.models import EXPIRING_SOON_DAYS, Enrollment
         from django.utils import timezone
 
         today = timezone.localdate()
-        seven_days = today + timedelta(days=7)
+        expiring_window = today + timedelta(days=EXPIRING_SOON_DAYS)
 
         expiring = Enrollment.objects.filter(
             is_active=True  # Custom manager filter
         ).filter(
             exit_date__gte=today,
-            exit_date__lte=seven_days
+            exit_date__lte=expiring_window
         ).count()
         return expiring

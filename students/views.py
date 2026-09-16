@@ -8,11 +8,11 @@ from datetime import timedelta
 from dateutil.relativedelta import relativedelta
 from decimal import Decimal
 
-from billing.models import Invoice
+from billing.models import AuditLog, Invoice
 from billing.views import _invoice_pdf_bytes
 from django.core.files.base import ContentFile
-from .forms import EnrollmentForm, StudentForm
-from .models import Enrollment, Student
+from .forms import EnrollmentForm, StudentForm, TeacherAssignmentForm
+from .models import EXPIRING_SOON_DAYS, Enrollment, Student
 from packages.models import Package
 from teachers.models import Teacher
 
@@ -42,7 +42,7 @@ def student_list(request):
     from django.db.models import Q
     today = timezone.localdate()
     if status == 'EXPIRING':
-        students = students.filter(enrollments__is_active=True, enrollments__entry_date__lte=today, enrollments__exit_date__gte=today, enrollments__exit_date__lte=today + timedelta(days=7))
+        students = students.filter(enrollments__is_active=True, enrollments__entry_date__lte=today, enrollments__exit_date__gte=today, enrollments__exit_date__lte=today + timedelta(days=EXPIRING_SOON_DAYS))
     elif status == 'ACTIVE':
         students = students.filter(enrollments__is_active=True, enrollments__entry_date__lte=today, enrollments__exit_date__gte=today)
     elif status == 'UPCOMING':
@@ -78,7 +78,6 @@ def student_create(request):
                 enrollment = Enrollment.objects.create(
                     student=student,
                     package=package,
-                    dance_style_snapshot=package.dance_style,
                     teacher=form.cleaned_data.get('teacher'),
                     entry_date=form.cleaned_data.get('entry_date') or timezone.localdate(),
                     exit_date=form.cleaned_data.get('exit_date'),
@@ -101,14 +100,13 @@ def student_create(request):
 @login_required
 def student_detail(request, pk):
     student = get_object_or_404(Student.objects.prefetch_related(
-        'enrollments__package', 'enrollments__dance_style_snapshot',
+        'enrollments__package',
         'enrollments__teacher', 'enrollments__time_slot', 'enrollments__payments'
     ), pk=pk)
     history = []
     for enrollment in student.enrollments.all():
         history.append({
             'package_name': enrollment.package.name,
-            'style': enrollment.dance_style_snapshot.name if enrollment.dance_style_snapshot else '',
             'entry_date': enrollment.entry_date,
             'exit_date': enrollment.exit_date,
             'status': enrollment.status,
@@ -119,6 +117,10 @@ def student_detail(request, pk):
             'payments': enrollment.payments.all(),
         })
     active = student.active_enrollment
+    enrollment_ids = [e.pk for e in student.enrollments.all()]
+    audit_logs = AuditLog.objects.filter(
+        model_name='Enrollment', object_id__in=enrollment_ids,
+    ).select_related('user').order_by('-timestamp')
     return render(request, 'students/detail.html', {
         'student': student,
         'enrollments': history,
@@ -127,8 +129,47 @@ def student_detail(request, pk):
         'assigned_teacher': active.teacher if active else None,
         'current_time_slot': active.time_slot if active else None,
         'current_invoice': active.invoices.order_by('-issued_date').first() if active else None,
+        'teacher_form': TeacherAssignmentForm(instance=active) if active else None,
+        'audit_logs': audit_logs,
         'page_title': student.full_name,
     })
+
+
+@login_required
+def student_change_teacher(request, pk):
+    """Change the teacher assigned to a student's active enrollment."""
+    student = get_object_or_404(Student, pk=pk)
+    active = student.active_enrollment
+    if active is None:
+        messages.error(request, 'This student has no active enrollment to reassign.')
+        return redirect('students:detail', pk=pk)
+    # Capture the stored values *before* binding the form: a bound ModelForm
+    # constructs the new instance in place, so reading ``active.teacher`` after
+    # validation would already return the incoming teacher and every change
+    # would look like "no change".
+    previous_teacher_id = active.teacher_id
+    previous_name = active.teacher.full_name if previous_teacher_id else 'None'
+    form = TeacherAssignmentForm(request.POST or None, instance=active)
+    if form.is_valid():
+        enrollment = form.save(commit=False)
+        new_teacher = enrollment.teacher
+        new_teacher_id = new_teacher.pk if new_teacher else None
+        if previous_teacher_id == new_teacher_id:
+            messages.info(request, 'The assigned teacher was not changed.')
+        else:
+            enrollment.save(update_fields=['teacher', 'updated_at'])
+            AuditLog.objects.create(
+                user=request.user,
+                action='UPDATE',
+                model_name='Enrollment',
+                object_id=enrollment.pk,
+                change_summary=(
+                    f'Assigned teacher changed from {previous_name} to '
+                    f'{new_teacher.full_name if new_teacher else "None"}'
+                ),
+            )
+            messages.success(request, 'Assigned teacher updated.')
+    return redirect('students:detail', pk=pk)
 
 
 @login_required

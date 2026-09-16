@@ -24,7 +24,9 @@ class StudentForm(forms.ModelForm):
             'is_active',
         ]
         widgets = {
-            'admission_level': forms.RadioSelect,
+            # Plain <select> dropdown (the model is not required, so Django
+            # adds the "Select admission level" empty option automatically).
+            'admission_level': forms.Select,
         }
 
     def __init__(self, *args, **kwargs):
@@ -166,8 +168,22 @@ class EnrollmentForm(forms.ModelForm):
         self.instance.student = self.student or self.instance.student
         enrollment = super().save(commit=False)
         enrollment.student = self.student or enrollment.student
-        enrollment.dance_style_snapshot = enrollment.package.dance_style
         if commit:
             enrollment.full_clean()
             enrollment.save()
         return enrollment
+
+
+class TeacherAssignmentForm(forms.ModelForm):
+    """Change the teacher assigned to a student's active enrollment."""
+
+    class Meta:
+        model = Enrollment
+        fields = ['teacher']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from teachers.models import Teacher
+        self.fields['teacher'].queryset = Teacher.objects.filter(is_active=True)
+        self.fields['teacher'].required = False
+        self.fields['teacher'].label = 'Assigned Teacher'

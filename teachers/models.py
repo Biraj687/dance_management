@@ -36,12 +36,6 @@ class Teacher(SoftDeleteModel):
         blank=True,
         verbose_name='Address'
     )
-    assigned_styles = models.ManyToManyField(
-        'styles.DanceStyle',
-        related_name='teachers',
-        blank=True,
-        verbose_name='Assigned Dance Styles'
-    )
     pay_type = models.CharField(
         max_length=10,
         choices=[

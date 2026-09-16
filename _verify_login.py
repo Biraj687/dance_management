@@ -1,7 +1,7 @@
 import os
 import django
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "manage_project.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "manage_project.settings.dev")
 django.setup()
 
 from django.test import Client
@@ -20,7 +20,7 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 user = User.objects.get(username="admin@gmail.com")
 c.force_login(user)
-for path in ["/students/", "/styles/", "/billing/", "/accounts/profile/"]:
+for path in ["/students/", "/packages/", "/billing/", "/accounts/profile/"]:
     resp = c.get(path)
     body = resp.content.decode("utf-8", errors="replace")
     print(path, resp.status_code, "no_dark=" + str("#2F2E29" not in body), "custom_css=" + str("custom.css" in body))

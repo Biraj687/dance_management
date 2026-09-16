@@ -8,7 +8,6 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('styles', '0001_initial'),
     ]
 
     operations = [
@@ -29,7 +28,6 @@ class Migration(migrations.Migration):
                 ('pay_type', models.CharField(choices=[('HOURLY', 'Hourly'), ('MONTHLY', 'Monthly')], default='HOURLY', max_length=10, verbose_name='Pay Type')),
                 ('pay_rate', models.DecimalField(decimal_places=2, max_digits=10, verbose_name='Pay Rate')),
                 ('max_student_capacity', models.PositiveIntegerField(default=0, verbose_name='Max Student Capacity')),
-                ('assigned_styles', models.ManyToManyField(blank=True, related_name='teachers', to='styles.dancestyle', verbose_name='Assigned Dance Styles')),
             ],
             options={
                 'verbose_name': 'Teacher',

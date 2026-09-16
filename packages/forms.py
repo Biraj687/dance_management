@@ -7,7 +7,7 @@ from .models import PackageTimeSlot
 class PackageForm(forms.ModelForm):
     class Meta:
         model = Package
-        fields = ['name', 'dance_style', 'duration_value', 'duration_unit', 'price', 'description', 'is_active']
+        fields = ['name', 'duration_value', 'duration_unit', 'price', 'description', 'is_active']
 
     def clean_price(self):
         price = self.cleaned_data['price']

@@ -11,7 +11,6 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('packages', '0001_initial'),
-        ('styles', '0001_initial'),
         ('teachers', '0001_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
@@ -51,7 +50,6 @@ class Migration(migrations.Migration):
                 ('amount_paid', models.DecimalField(decimal_places=2, default=0, max_digits=10, verbose_name='Amount Paid')),
                 ('payment_status', models.CharField(choices=[('PAID', 'Paid'), ('PENDING', 'Pending'), ('PARTIAL', 'Partial')], default='PENDING', max_length=10, verbose_name='Payment Status')),
                 ('is_active', models.BooleanField(default=True, verbose_name='Active Slot')),
-                ('dance_style_snapshot', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='styles.dancestyle', verbose_name='Dance Style')),
                 ('package', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='enrollments', to='packages.package', verbose_name='Package')),
                 ('teacher', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='enrollments', to='teachers.teacher', verbose_name='Assigned Teacher')),
                 ('student', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='enrollments', to='students.student', verbose_name='Student')),

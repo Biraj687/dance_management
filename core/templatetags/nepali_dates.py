@@ -14,13 +14,13 @@ register = template.Library()
 
 @register.filter
 def to_bs(value):
-    """Format a stored A.D. date/datetime as Bikram Sambat: भदौ ३१, २०८३."""
-    return format_bs(value)
+    """Format a stored A.D. date/datetime as Bikram Sambat: 2083-05-31."""
+    return format_bs_short(value)
 
 
 @register.filter
 def to_bs_short(value):
-    """Format a stored B.S. date compactly: २०८३-०५-३१."""
+    """Format a stored B.S. date compactly: 2083-05-31."""
     return format_bs_short(value)
 
 

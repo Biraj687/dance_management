@@ -16,13 +16,13 @@ from django.core.files.base import ContentFile
 from core.dates import format_bs_iso
 from .forms import PaymentForm
 from .models import AuditLog, Invoice, Payment
-from students.models import Enrollment, Student
+from students.models import EXPIRING_SOON_DAYS, Enrollment, Student
 from teachers.models import Teacher
 
 
 def _invoices(request):
     invoices = Invoice.objects.select_related(
-        'enrollment__student', 'enrollment__package', 'enrollment__dance_style_snapshot'
+        'enrollment__student', 'enrollment__package'
     )
     status = request.GET.get('status', '').upper()
     if status in {'PAID', 'PENDING', 'PARTIAL'}:
@@ -73,7 +73,7 @@ def payment_create(request, pk):
 
 @login_required
 def invoice_download(request, pk):
-    invoice = get_object_or_404(Invoice.objects.select_related('enrollment__student', 'enrollment__package', 'enrollment__dance_style_snapshot'), pk=pk)
+    invoice = get_object_or_404(Invoice.objects.select_related('enrollment__student', 'enrollment__package'), pk=pk)
     if not invoice.pdf_file:
         content = _invoice_pdf_bytes(invoice)
         invoice.pdf_file.save(f'{invoice.invoice_number}.pdf', ContentFile(content), save=True)
@@ -106,9 +106,7 @@ def _filtered_students(request):
     elif status == 'EXPIRED':
         qs = qs.filter(enrollments__exit_date__lt=today)
     elif status == 'EXPIRING':
-        qs = qs.filter(enrollments__is_active=True, enrollments__entry_date__lte=today, enrollments__exit_date__gte=today, enrollments__exit_date__lte=today + timedelta(days=7))
-    if request.GET.get('style'):
-        qs = qs.filter(enrollments__dance_style_snapshot_id=request.GET['style'])
+        qs = qs.filter(enrollments__is_active=True, enrollments__entry_date__lte=today, enrollments__exit_date__gte=today, enrollments__exit_date__lte=today + timedelta(days=EXPIRING_SOON_DAYS))
     if request.GET.get('teacher'):
         qs = qs.filter(enrollments__teacher_id=request.GET['teacher'])
     if request.GET.get('payment_status', '').upper() in {'PAID', 'PENDING', 'PARTIAL'}:
@@ -125,9 +123,9 @@ def export_students_csv(request):
 
 @login_required
 def export_teachers_csv(request):
-    qs = Teacher.objects.prefetch_related('assigned_styles')
-    rows = [(t.full_name, t.phone, t.email, ', '.join(s.name for s in t.assigned_styles.all()), t.active_assigned_student_count) for t in qs]
-    return _csv_response('teachers.csv', ['Teacher', 'Phone', 'Email', 'Styles', 'Active Students'], rows)
+    qs = Teacher.objects.all()
+    rows = [(t.full_name, t.phone, t.email, t.active_assigned_student_count) for t in qs]
+    return _csv_response('teachers.csv', ['Teacher', 'Phone', 'Email', 'Active Students'], rows)
 
 
 @login_required
@@ -184,7 +182,7 @@ def _invoice_pdf_bytes(invoice):
     pdf.setFont('Helvetica', 11)
     lines = [
         f'Student: {enrollment.student.full_name}',
-        f'Package: {enrollment.package.name} ({enrollment.dance_style_snapshot.name})',
+        f'Package: {enrollment.package.name}',
         f'Period: {format_bs_iso(enrollment.entry_date)} to {format_bs_iso(enrollment.exit_date)}',
         f'Total: {enrollment.total_fee}',
         f'Paid: {enrollment.amount_paid}',

@@ -63,7 +63,6 @@ LOCAL_APPS = [
     'students',
     'teachers',
     'packages',
-    'styles',
     'billing',
     'dashboard',
 ]

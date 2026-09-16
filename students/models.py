@@ -8,6 +8,9 @@ from core.models import TimeStampedModel, SoftDeleteModel
 from django.utils import timezone
 from datetime import timedelta
 
+# Number of days before a package expiry that a student counts as "expiring soon".
+EXPIRING_SOON_DAYS = 10
+
 
 class Student(SoftDeleteModel):
     """
@@ -42,7 +45,6 @@ class Student(SoftDeleteModel):
     mother_phone = models.CharField(max_length=20, blank=True)
     previous_institute = models.CharField(max_length=180, blank=True, verbose_name='Previous Institute')
     training_duration = models.CharField(max_length=100, blank=True, verbose_name='Training Duration')
-    preferred_dance_styles = models.JSONField(default=list, blank=True)
     emergency_contact_name = models.CharField(
         max_length=150,
         blank=True,
@@ -89,13 +91,13 @@ class Student(SoftDeleteModel):
 
     @property
     def is_expiring_soon(self):
-        """Check if student's package expires within 7 days."""
+        """Check if student's package expires within 10 days."""
         enrollment = self.active_enrollment
         if not enrollment:
             return False
         today = timezone.localdate()
-        seven_days = today + timedelta(days=7)
-        return today <= enrollment.exit_date <= seven_days
+        expiring_window = today + timedelta(days=EXPIRING_SOON_DAYS)
+        return today <= enrollment.exit_date <= expiring_window
 
     @property
     def status(self):
@@ -139,11 +141,6 @@ class Enrollment(TimeStampedModel):
         on_delete=models.PROTECT,
         related_name='enrollments',
         verbose_name='Package'
-    )
-    dance_style_snapshot = models.ForeignKey(
-        'styles.DanceStyle',
-        on_delete=models.PROTECT,
-        verbose_name='Dance Style'
     )
     teacher = models.ForeignKey(
         'teachers.Teacher',
@@ -230,7 +227,7 @@ class Enrollment(TimeStampedModel):
 
     @property
     def expiring_soon(self):
-        return self.status == 'ACTIVE' and self.days_until_expiry <= 7
+        return self.status == 'ACTIVE' and self.days_until_expiry <= EXPIRING_SOON_DAYS
 
     @property
     def days_until_expiry(self):
