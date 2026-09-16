@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load nepali_dates %}
 {% block title %}{{ studio_name }} - {{ invoice.invoice_number }}{% endblock %}
 {% block page_title %}{{ invoice.invoice_number }}{% endblock %}
 {% block content %}
@@ -8,7 +9,7 @@
             <div class="flex items-center justify-between mb-6">
                 <div>
                     <h2 class="text-lg font-semibold text-text-primary">Invoice Summary</h2>
-                    <p class="text-sm text-text-secondary">Issued {{ invoice.issued_date }}</p>
+                    <p class="text-sm text-text-secondary">Issued {{ invoice.issued_date|to_bs }}</p>
                 </div>
                 {% if invoice.enrollment.payment_status == 'PAID' %}
                 <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-status-active/20 text-status-active border border-status-active/40">Paid</span>
@@ -33,7 +34,7 @@
                 </div>
                 <div>
                     <dt class="text-xs text-text-secondary">Enrollment Period</dt>
-                    <dd class="text-sm text-text-primary">{{ invoice.enrollment.entry_date }} &rarr; {{ invoice.enrollment.exit_date }}</dd>
+                    <dd class="text-sm text-text-primary">{{ invoice.enrollment.entry_date|to_bs_short }} &rarr; {{ invoice.enrollment.exit_date|to_bs_short }}</dd>
                 </div>
                 <div>
                     <dt class="text-xs text-text-secondary">Payment Method</dt>
@@ -82,7 +83,7 @@
         </div>
         <div class="bg-bg-elevated-1 border border-border-hairline rounded-lg p-6 mt-6">
             <h2 class="text-lg font-semibold text-text-primary mb-4">Payment History</h2>
-            {% for payment in payments %}<div class="flex justify-between border-b border-border-hairline py-2"><span>{{ payment.paid_on }} · {{ payment.payment_method|default:'Unspecified' }}</span><strong>{{ currency_symbol }} {{ payment.amount }}</strong></div>{% empty %}<p class="text-text-secondary">No payments recorded.</p>{% endfor %}
+            {% for payment in payments %}<div class="flex justify-between border-b border-border-hairline py-2"><span>{{ payment.paid_on|to_bs_short }} · {{ payment.payment_method|default:'Unspecified' }}</span><strong>{{ currency_symbol }} {{ payment.amount }}</strong></div>{% empty %}<p class="text-text-secondary">No payments recorded.</p>{% endfor %}
         </div>
     </div>
 </div>

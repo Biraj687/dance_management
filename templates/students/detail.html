@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load nepali_dates %}
 {% block title %}{{ studio_name }} - {{ student.full_name }}{% endblock %}
 {% block page_title %}{{ student.full_name }}{% endblock %}
 {% block content %}
@@ -74,12 +75,12 @@
                         <tr class="border-b border-border-hairline last:border-0">
                             <td class="py-3 pr-4 text-text-primary">{{ enrollment.package_name }}</td>
                             <td class="py-3 pr-4 text-text-secondary">{{ enrollment.teacher|default:'-' }}</td>
-                            <td class="py-3 pr-4 text-text-secondary">{{ enrollment.entry_date }}</td>
-                            <td class="py-3 pr-4 text-text-secondary">{{ enrollment.exit_date }}</td>
+                            <td class="py-3 pr-4 text-text-secondary">{{ enrollment.entry_date|to_bs_short }}</td>
+                            <td class="py-3 pr-4 text-text-secondary">{{ enrollment.exit_date|to_bs_short }}</td>
                             <td class="py-3 pr-4 text-text-secondary">{{ currency_symbol }} {{ enrollment.amount }}</td>
                             <td class="py-3 pr-4 text-text-secondary">{{ currency_symbol }} {{ enrollment.balance }}</td>
                             <td class="py-3 pr-4 text-text-secondary">{{ enrollment.time_slot|default:'Any time' }}</td>
-                            <td class="py-3 pr-4 text-text-secondary">{% for payment in enrollment.payments %}{{ payment.paid_on }} · {{ payment.get_payment_method_display }} · {{ currency_symbol }} {{ payment.amount }}{% if not forloop.last %}<br>{% endif %}{% empty %}No payments{% endfor %}</td>
+                            <td class="py-3 pr-4 text-text-secondary">{% for payment in enrollment.payments %}{{ payment.paid_on|to_bs_short }} · {{ payment.get_payment_method_display }} · {{ currency_symbol }} {{ payment.amount }}{% if not forloop.last %}<br>{% endif %}{% empty %}No payments{% endfor %}</td>
                             <td class="py-3">
                                 {% if enrollment.status == 'ACTIVE' %}
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-status-active/20 text-status-active border border-status-active/40">Active</span>

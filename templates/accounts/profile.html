@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load nepali_dates %}
 {% block title %}{{ studio_name }} - Profile{% endblock %}
 {% block page_title %}Profile{% endblock %}
 {% block content %}
@@ -29,7 +30,7 @@
             </div>
             <div>
                 <dt class="text-xs text-text-secondary">Last login</dt>
-                <dd class="text-sm text-text-primary">{{ user.last_login|date:"M d, Y H:i"|default:"—" }}</dd>
+                <dd class="text-sm text-text-primary">{{ user.last_login|to_bs|default:"—" }}</dd>
             </div>
         </dl>
         <div class="mt-6 pt-6 border-t border-border-hairline">

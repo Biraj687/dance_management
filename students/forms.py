@@ -1,6 +1,8 @@
 from django import forms
+from django.utils import timezone
 from decimal import Decimal
 
+from core.forms import BSDateField
 from .models import Enrollment, Student
 from packages.models import PackageTimeSlot
 
@@ -44,16 +46,15 @@ class StudentForm(forms.ModelForm):
                 queryset=PackageTimeSlot.objects.select_related('package').filter(package__is_active=True),
                 required=False, label='Class Time'
             )
-            self.fields['entry_date'] = forms.DateField(
+            self.fields['entry_date'] = BSDateField(
                 required=False,
-                widget=forms.DateInput(attrs={'type': 'date'}),
-                label='Entry Date'
+                label='Entry Date (B.S.)'
             )
-            self.fields['exit_date'] = forms.DateField(
+            self.fields['exit_date'] = BSDateField(
                 required=False,
-                widget=forms.DateInput(attrs={'type': 'date'}),
-                label='Exit Date'
+                label='Exit Date (B.S.)'
             )
+            self.initial.setdefault('entry_date', timezone.localdate())
             self.fields['package_term'] = forms.ChoiceField(
                 choices=[('', 'Select package term')] + Enrollment.PACKAGE_TERM_CHOICES,
                 required=False, label='Package Term'
@@ -123,15 +124,12 @@ class EnrollmentForm(forms.ModelForm):
             'package', 'teacher', 'entry_date', 'exit_date', 'total_fee',
             'amount_paid', 'payment_status', 'package_term', 'payment_method', 'time_slot',
         ]
-        widgets = {
-            'entry_date': forms.DateInput(attrs={'type': 'date'}),
-            'exit_date': forms.DateInput(attrs={'type': 'date'}),
-        }
 
     def __init__(self, *args, student=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.student = student
-        self.fields['exit_date'].required = False
+        self.fields['entry_date'] = BSDateField(label='Entry Date (B.S.)')
+        self.fields['exit_date'] = BSDateField(required=False, label='Exit Date (B.S.)')
         self.fields['total_fee'].required = False
         self.fields['package'].queryset = self.fields['package'].queryset.filter(is_active=True)
         self.fields['teacher'].queryset = self.fields['teacher'].queryset.filter(is_active=True)

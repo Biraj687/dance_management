@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load nepali_dates %}
 {% block title %}{{ studio_name }} - Dashboard{% endblock %}
 {% block page_title %}Dashboard{% endblock %}
 {% block content %}
@@ -13,8 +14,8 @@
                 <p class="text-text-secondary mt-1">Welcome back! Here's what's happening at your studio today.</p>
             </div>
             <form method="get" hx-get="{% url 'dashboard:index' %}" hx-target="#recent-invoices" hx-select="#recent-invoices" hx-swap="outerHTML" class="flex flex-wrap items-end gap-3 rounded-xl bg-white/80 border border-white p-3">
-                <div><label for="start" class="block text-xs text-text-secondary mb-1">From</label><input id="start" name="start" type="date" value="{{ start_date }}" class="bg-white border border-border-hairline rounded-lg px-3 py-2 text-sm"></div>
-                <div><label for="end" class="block text-xs text-text-secondary mb-1">To</label><input id="end" name="end" type="date" value="{{ end_date }}" class="bg-white border border-border-hairline rounded-lg px-3 py-2 text-sm"></div>
+                <div><label for="start" class="block text-xs text-text-secondary mb-1">From (B.S.)</label><input id="start" name="start" type="text" inputmode="numeric" autocomplete="off" placeholder="YYYY-MM-DD" value="{{ start_date }}" class="bg-white border border-border-hairline rounded-lg px-3 py-2 text-sm"></div>
+                <div><label for="end" class="block text-xs text-text-secondary mb-1">To (B.S.)</label><input id="end" name="end" type="text" inputmode="numeric" autocomplete="off" placeholder="YYYY-MM-DD" value="{{ end_date }}" class="bg-white border border-border-hairline rounded-lg px-3 py-2 text-sm"></div>
                 <button class="bg-accent-gold hover:bg-accent-gold-hover text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm">Apply</button>
             </form>
         </div>
@@ -96,7 +97,7 @@
                         </div>
                     </div>
                     <div class="text-right">
-                        <p class="text-text-secondary text-sm">Expires {{ enrollment.exit_date }}</p>
+                        <p class="text-text-secondary text-sm">Expires {{ enrollment.exit_date|to_bs_short }}</p>
                     </div>
                 </div>
                 {% endfor %}

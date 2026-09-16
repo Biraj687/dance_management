@@ -13,6 +13,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from django.core.files.base import ContentFile
 
+from core.dates import format_bs_iso
 from .forms import PaymentForm
 from .models import AuditLog, Invoice, Payment
 from students.models import Enrollment, Student
@@ -134,7 +135,7 @@ def export_ledger_csv(request):
     rows = []
     for invoice in _invoices(request):
         enrollment = invoice.enrollment
-        rows.append((invoice.invoice_number, enrollment.student.full_name, enrollment.total_fee, enrollment.amount_paid, enrollment.balance_due, enrollment.payment_status, invoice.issued_date))
+        rows.append((invoice.invoice_number, enrollment.student.full_name, enrollment.total_fee, enrollment.amount_paid, enrollment.balance_due, enrollment.payment_status, format_bs_iso(invoice.issued_date)))
     return _csv_response('ledger.csv', ['Invoice', 'Student', 'Total', 'Paid', 'Balance', 'Status', 'Issued'], rows)
 
 
@@ -184,13 +185,13 @@ def _invoice_pdf_bytes(invoice):
     lines = [
         f'Student: {enrollment.student.full_name}',
         f'Package: {enrollment.package.name} ({enrollment.dance_style_snapshot.name})',
-        f'Period: {enrollment.entry_date} to {enrollment.exit_date}',
+        f'Period: {format_bs_iso(enrollment.entry_date)} to {format_bs_iso(enrollment.exit_date)}',
         f'Total: {enrollment.total_fee}',
         f'Paid: {enrollment.amount_paid}',
         f'Balance due: {enrollment.balance_due}',
     ]
     for payment in enrollment.payments.order_by('paid_on', 'created_at'):
-        lines.append(f'Payment: {payment.paid_on} | {payment.get_payment_method_display() or "Unspecified"} | {payment.amount}')
+        lines.append(f'Payment: {format_bs_iso(payment.paid_on)} | {payment.get_payment_method_display() or "Unspecified"} | {payment.amount}')
     for index, line in enumerate(lines):
         pdf.drawString(48, 760 - index * 22, line)
     pdf.save()

@@ -7,9 +7,20 @@ from django.shortcuts import render
 from django.utils import timezone
 
 from billing.models import Invoice
+from core.dates import parse_bs
 from students.models import Enrollment
 from teachers.models import Teacher
 from packages.models import Package
+
+
+def _parse_bs_filter(value):
+    """Return the Gregorian date for a B.S. filter value, or None if blank/invalid."""
+    if not value:
+        return None
+    try:
+        return parse_bs(value)
+    except (TypeError, ValueError):
+        return None
 
 
 @login_required
@@ -23,10 +34,13 @@ def dashboard_index(request):
         'enrollment__student',
         'enrollment__dance_style_snapshot',
     )
-    if start:
-        invoices = invoices.filter(issued_date__gte=start)
-    if end:
-        invoices = invoices.filter(issued_date__lte=end)
+    # The filter inputs accept B.S. dates; storage is Gregorian, so translate.
+    start_ad = _parse_bs_filter(start)
+    end_ad = _parse_bs_filter(end)
+    if start_ad:
+        invoices = invoices.filter(issued_date__gte=start_ad)
+    if end_ad:
+        invoices = invoices.filter(issued_date__lte=end_ad)
     active_enrollments = Enrollment.objects.filter(
         is_active=True, entry_date__lte=today, exit_date__gte=today,
     )

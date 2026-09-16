@@ -79,7 +79,7 @@
                 <h1 class="hidden md:block text-xl font-display font-bold text-text-primary">{% block page_title %}Dashboard{% endblock %}</h1>
             </div>
             <div class="flex items-center space-x-4">
-                <span class="text-sm text-text-secondary">{{ today|date:"M d, Y" }}</span>
+                <span class="text-sm text-text-secondary">{{ today_bs }}</span>
                 <div class="flex items-center space-x-2">
                     <div class="w-8 h-8 rounded-full bg-accent-gold flex items-center justify-center text-white font-medium text-sm">
                         {{ user.first_name|default:user.username|slice:":1"|upper }}
